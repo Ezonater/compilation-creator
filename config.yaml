@@ -1,2 +1,8 @@
 generate_timestamps: True
-#generate_timestamps generates a text file full of timestamps. [True/False]
+ # generates a text file full of timestamps. [True/False]
+video_bitrate: 2000000
+ # defines the video bitrate for the compilation. [408p: 500000, 720p: 1000000, *1080p: 2000000, 4K: 4000000, Insane: 8000000]
+audio_bitrate: 256000
+ # defines the audio bitrate for the compilation. Recommended settings: [128000, *256000, 384000, 512000]
+ #
+ # * = recommended setting

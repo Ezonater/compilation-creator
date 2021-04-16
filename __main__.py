@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import subprocess
+
 import yaml
 import threading
 import youtube_dlc
@@ -8,18 +10,21 @@ import ffmpeg
 import tkinter as tk
 import datetime
 import math
-
+import time
+import collections
+import copy
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
+from subprocess import CREATE_NO_WINDOW
 
 current_playlist = None
 current_thumbnail = None
 current_title = None
 
 # Default values
-video_bitrate = 1500000
-audio_bitrate = 256000
+video_bitrate = 1000000
+audio_bitrate = 128000
 generate_timestamps = False
 
 currently_rendering = False
@@ -27,10 +32,33 @@ currently_rendering = False
 with open(os.getcwd() + '\\config.yaml') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
     generate_timestamps = config['generate_timestamps']
+    video_bitrate = config['video_bitrate']
+    audio_bitrate = config['audio_bitrate']
     print(generate_timestamps)
+
+print(video_bitrate)
+print(audio_bitrate)
 
 # Shortcuts
 tracklist = os.getcwd() + '\\tracklist'
+
+
+def convert_kwargs_to_cmd_line_args(kwargs):
+    """Helper function to build command line arguments out of dict."""
+    args = []
+    for k in sorted(kwargs.keys()):
+        v = kwargs[k]
+        if isinstance(v, collections.Iterable) and not isinstance(v, str):
+            for value in v:
+                args.append('-{}'.format(k))
+                if value is not None:
+                    args.append('{}'.format(value))
+            continue
+        args.append('-{}'.format(k))
+        if v is not None:
+            args.append('{}'.format(v))
+    return args
+
 
 def root_program():
     # Important parameters
@@ -40,7 +68,8 @@ def root_program():
 
     # Initialize the program
     root = tk.Tk()
-    root.title('Compilation Software')
+    root.title('Compilation++')
+    root.iconphoto(False, tk.PhotoImage(file="icon.png"))
 
     def check_start_button():
         if (playlist_entry.get() != "") & (title_entry.get() != "") & (current_thumbnail is not None):
@@ -84,7 +113,35 @@ def root_program():
         check_start_button()
         print(os.path.splitext(os.path.basename(current_thumbnail))[0])
 
+    class Count:
+        continue_count = True
+        process_name = None
+
+        def __init__(self, process_name):
+            self.process_name = process_name
+
+        def count(self):
+            time_elapsed = 0
+            while self.continue_count:
+                time.sleep(1)
+                time_elapsed += 1
+                count_label.config(
+                    text=self.process_name + ": " + str(datetime.timedelta(seconds=math.floor(time_elapsed))))
+                count_label.pack()
+
+        def start(self):
+            t2 = threading.Thread(target=self.count)
+            t2.start()
+
+        def stop(self):
+            self.continue_count = False
+            count_label.forget()
+
     def playlist_download(playlist):
+        # Start the count
+        count = Count("Downloading mp3s from playlist")
+        count.start()
+
         # Downloading the videos
         ydl_opts = {
             'format': 'bestaudio/best',
@@ -94,13 +151,21 @@ def root_program():
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-                'preferredquality': '192',
+                'preferredquality': '256',
             }],
         }
         with youtube_dlc.YoutubeDL(ydl_opts) as ydl:
             ydl.download([playlist])
 
+        # Stop the count
+        count.stop()
+        del count
+
     def generate_tracklist():
+        # Start the count
+        count = Count("Generating tracklist")
+        count.start()
+
         elapsed_time = 0
         f = open('tracklist.txt', 'w')
         f.close()
@@ -112,17 +177,33 @@ def root_program():
                 f = open("tracklist.txt", "a", encoding='utf-8')
                 f.write(timestamp + ' - ' + os.path.splitext(os.path.basename(track))[0] + '\n')
                 f.close()
+        # Stop the count
+        count.stop()
+        del count
 
     def compile(thumbnail, title):
+        # Start the count
+        count = Count("Generating thumbnail")
+        count.start()
+
         completelist = []
+
         # Generate thumbnail video
         (
             ffmpeg
                 .input(thumbnail)
                 .output(os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4',
-                        audio_bitrate=audio_bitrate, video_bitrate=video_bitrate)
+                audio_bitrate=audio_bitrate, video_bitrate=video_bitrate, loglevel="quiet")
                 .run()
         )
+
+        # Stop the count
+        count.stop()
+        del count
+
+        # Start the count
+        count = Count("Generating mp3 videos")
+        count.start()
 
         # Generate mp3 videos
         for filename in os.listdir(tracklist):
@@ -132,9 +213,16 @@ def root_program():
                         .input(tracklist + '\\' + filename)
                         .output(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4',
                                 audio_bitrate=audio_bitrate,
-                                video_bitrate=video_bitrate)
+                                video_bitrate=video_bitrate, loglevel="quiet")
                         .run()
                 )
+        # Stop the count
+        count.stop()
+        del count
+
+        # Start the count
+        count = Count("Generating mp3 + thumbnail videos")
+        count.start()
 
         # Generate thumbnail + mp3 videos
         for filename in os.listdir(tracklist + '\\mp4'):
@@ -144,17 +232,33 @@ def root_program():
                 v1 = video_video.video
                 a1 = audio_video.audio
                 ffmpeg.output(v1, a1, tracklist + '\\mp4\\full\\' + filename, audio_bitrate=audio_bitrate,
-                              video_bitrate=video_bitrate).run()
+                              video_bitrate=video_bitrate, loglevel="quiet").run()
                 completelist.append(v1)
                 completelist.append(a1)
+
+        # Stop the count
+        count.stop()
+        del count
+
+        # Start the count
+        count = Count("Concatenating videos... This one will take a while")
+        count.start()
 
         # Concatenate
         joined = ffmpeg.concat(*completelist, v=1, a=1).node
         v3 = joined[0]
         a3 = joined[1]
-        ffmpeg.output(v3, a3, title + '.mp4', audio_bitrate=audio_bitrate, video_bitrate=video_bitrate).run()
+        ffmpeg.output(v3, a3, title + '.mp4', audio_bitrate=audio_bitrate, video_bitrate=video_bitrate, loglevel="quiet").run()
+
+        # Stop the count
+        count.stop()
+        del count
 
     def clean_up():
+        # Start the count
+        count = Count("Clean up files")
+        count.start()
+
         # Clean up, clean up. Everybody do your share.
 
         for filename in os.listdir(tracklist + '\\mp4'):
@@ -177,6 +281,10 @@ def root_program():
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
                 os.remove(tracklist + '\\' + filename)
+
+        # Stop the count
+        count.stop()
+        del count
 
     def start_compiling():
         # Grab globals
@@ -203,11 +311,10 @@ def root_program():
         compile(this_thumbnail, this_title)
         clean_up()
 
-        # Deactivate UI
-        title_entry.config(state=tk.NORMAL)
-        playlist_entry.config(state=tk.NORMAL)
-        thumbnail_button.config(state=tk.NORMAL)
+        # Reactivate UI
         start_button.config(state=tk.NORMAL)
+        count_label.config(text="")
+        count_label.forget()
 
         currently_rendering = False
 
@@ -239,6 +346,9 @@ def root_program():
 
     start_label = tk.Label(root, text="Title: " + str(current_title) + "\nPlaylist: " + str(current_playlist), pady=30)
     start_button = tk.Button(root, text="Start!", state=tk.DISABLED, command=start_threading)
+
+    count_label = tk.Label(root, text="Time Elapsed: ")
+
     error_text_variable = tk.StringVar()
     error_label = tk.Label(root, textvariable=error_text_variable)
 
@@ -247,8 +357,7 @@ def root_program():
 
     def next_screen():
         # New Window
-        root.title("This is the main menu")
-        root.geometry("400x400")
+        root.geometry("600x600")
 
         # Clean up
         begin_button.forget()
