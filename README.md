@@ -17,7 +17,7 @@ The program is pretty self-explanatory, however I thought it would be best to st
 - Be patient! Compiling playlists of 25 or more will probably take an hour or two to render
 - There is no progress bar, so again, be patient!
 
-# Info
+# Limitations
 This program is pretty limiting. Here are some of the limits put in place as of 4/16/2021:
 - You may only use one photo for the entire compilation
 - Video bitrate and audio bitrate are fixed to 1080p (to fix)
