@@ -1,6 +1,4 @@
 from __future__ import unicode_literals
-from tkinter import filedialog
-from mutagen.mp3 import MP3
 
 import yaml
 import threading
@@ -10,6 +8,10 @@ import ffmpeg
 import tkinter as tk
 import datetime
 import math
+
+
+from tkinter import filedialog
+from mutagen.mp3 import MP3
 
 current_playlist = None
 current_thumbnail = None
@@ -100,11 +102,16 @@ def root_program():
 
     def generate_tracklist():
         elapsed_time = 0
+        f = open('tracklist.txt', 'w')
+        f.close()
         for track in os.listdir(os.getcwd() + '\\tracklist'):
             if track.endswith('.mp3'):
                 timestamp = str(datetime.timedelta(seconds=math.floor(elapsed_time)))
                 elapsed_time += MP3(os.getcwd() + '\\tracklist\\' + track).info.length
                 print(timestamp)
+                f = open("tracklist.txt", "a", encoding='utf-8')
+                f.write(timestamp + ' - ' + os.path.splitext(os.path.basename(track))[0] + '\n')
+                f.close()
 
     def compile(thumbnail, title):
         completelist = []

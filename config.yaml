@@ -1,0 +1,2 @@
+generate_timestamps: True
+#generate_timestamps generates a text file full of timestamps. [True/False]
