@@ -29,35 +29,24 @@ generate_timestamps = False
 
 currently_rendering = False
 
-with open(os.getcwd() + '\\config.yaml') as file:
-    config = yaml.load(file, Loader=yaml.FullLoader)
-    generate_timestamps = config['generate_timestamps']
-    video_bitrate = config['video_bitrate']
-    audio_bitrate = config['audio_bitrate']
-    print(generate_timestamps)
-
-print(video_bitrate)
-print(audio_bitrate)
-
 # Shortcuts
 tracklist = os.getcwd() + '\\tracklist'
 
 
-def convert_kwargs_to_cmd_line_args(kwargs):
-    """Helper function to build command line arguments out of dict."""
-    args = []
-    for k in sorted(kwargs.keys()):
-        v = kwargs[k]
-        if isinstance(v, collections.Iterable) and not isinstance(v, str):
-            for value in v:
-                args.append('-{}'.format(k))
-                if value is not None:
-                    args.append('{}'.format(value))
-            continue
-        args.append('-{}'.format(k))
-        if v is not None:
-            args.append('{}'.format(v))
-    return args
+# Useful functions
+def load_config():
+    global generate_timestamps
+    global video_bitrate
+    global audio_bitrate
+    with open(os.getcwd() + '\\config.yaml') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+        generate_timestamps = config['generate_timestamps']
+        video_bitrate = config['video_bitrate']
+        audio_bitrate = config['audio_bitrate']
+        print(generate_timestamps)
+
+
+load_config()
 
 
 def root_program():
@@ -71,13 +60,19 @@ def root_program():
     root.title('Compilation++')
     root.iconphoto(False, tk.PhotoImage(file="icon.png"))
 
+    def render_info():
+        start_label.config(
+            text="Title: " + title_entry.get() + "\nPlaylist: " + playlist_entry.get() + "\nThumbnail: " + current_thumbnail + "\n" + "\nVideo Bitrate: " + str(
+                video_bitrate) + "\nAudio Bitrate: " + str(audio_bitrate) + "\nGenerate Timestamps?: " + str(
+                generate_timestamps))
+
     def check_start_button():
-        if (playlist_entry.get() != "") & (title_entry.get() != "") & (current_thumbnail is not None):
+        if (playlist_entry.get() != "") & (title_entry.get() != "") & (current_thumbnail is not None) & (
+                current_thumbnail != ""):
             if playlist_entry.get()[:38] == "https://www.youtube.com/playlist?list=":
                 if not currently_rendering:
                     start_button.config(state=tk.NORMAL)
-                start_label.config(
-                    text="Title: " + title_entry.get() + "\nPlaylist: " + playlist_entry.get() + "\nThumbnail: " + current_thumbnail)
+                    render_info()
                 start_label.pack()
             else:
                 start_label.forget()
@@ -108,26 +103,27 @@ def root_program():
         global current_thumbnail
         current_thumbnail = filetime
         if start_label.winfo_exists():
-            start_label.config(
-                text="Title: " + title_entry.get() + "\nPlaylist: " + playlist_entry.get() + "\nThumbnail: " + current_thumbnail)
+            render_info()
         check_start_button()
         print(os.path.splitext(os.path.basename(current_thumbnail))[0])
 
     class Count:
         continue_count = True
         process_name = None
+        count_label = None
 
         def __init__(self, process_name):
             self.process_name = process_name
 
         def count(self):
             time_elapsed = 0
+            self.count_label = tk.Label(root, text="Time Elapsed: ")
+            self.count_label.pack()
             while self.continue_count:
                 time.sleep(1)
                 time_elapsed += 1
-                count_label.config(
+                self.count_label.config(
                     text=self.process_name + ": " + str(datetime.timedelta(seconds=math.floor(time_elapsed))))
-                count_label.pack()
 
         def start(self):
             t2 = threading.Thread(target=self.count)
@@ -135,7 +131,7 @@ def root_program():
 
         def stop(self):
             self.continue_count = False
-            count_label.forget()
+            self.count_label.forget()
 
     def playlist_download(playlist):
         # Start the count
@@ -189,7 +185,8 @@ def root_program():
         completelist = []
 
         # Generate thumbnail video
-        subprocess.call(['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')], CREATE_NO_WINDOW)
+        subprocess.call(['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(
+            os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -202,7 +199,9 @@ def root_program():
         # Generate mp3 videos
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
-                subprocess.call(['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], CREATE_NO_WINDOW)
+                subprocess.call(['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
+                                 str(audio_bitrate),
+                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -218,13 +217,14 @@ def root_program():
                 f = open("concat.txt", "a", encoding='utf-8')
                 entry = 'file ' + '\'' + tracklist + '\\mp4\\full\\'
                 entry += filename.replace("\'", "\'\\\'\'")
-                entry +=  '\'\n'
+                entry += '\'\n'
                 f.write(entry)
                 subprocess.call(['ffmpeg',
-                                 '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
+                                 '-i',
+                                 str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
                                  '-i', str(tracklist + '\\mp4\\' + filename),
                                  '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate),
-                                 '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)], CREATE_NO_WINDOW)
+                                 '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)], creationflags=CREATE_NO_WINDOW)
                 f.close()
 
         # Stop the count
@@ -236,7 +236,7 @@ def root_program():
         count.start()
 
         # Concatenate
-        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], CREATE_NO_WINDOW)
+        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -303,8 +303,6 @@ def root_program():
 
         # Reactivate UI
         start_button.config(state=tk.NORMAL)
-        count_label.config(text="")
-        count_label.forget()
 
         currently_rendering = False
 
@@ -327,23 +325,23 @@ def root_program():
                                  lambda name, index, mode,
                                         playlist_text_variable=playlist_text_variable,: playlist_update(
                                      playlist_text_variable))
-    playlist_entry = tk.Entry(root, textvariable=playlist_text_variable, width=50)
+    playlist_entry = tk.Entry(root, textvariable=playlist_text_variable, width=80)
     title_entry_label = tk.Label(root, text="Enter your title here:")
     title_text_variable = tk.StringVar()
     title_text_variable.trace("w", lambda name, index, mode, title_text_variable=title_text_variable,: title_update(
         title_text_variable))
-    title_entry = tk.Entry(root, textvariable=title_text_variable)
+    title_entry = tk.Entry(root, textvariable=title_text_variable, width=50)
 
     start_label = tk.Label(root, text="Title: " + str(current_title) + "\nPlaylist: " + str(current_playlist), pady=30)
     start_button = tk.Button(root, text="Start!", state=tk.DISABLED, command=start_threading)
-
-    count_label = tk.Label(root, text="Time Elapsed: ")
 
     error_text_variable = tk.StringVar()
     error_label = tk.Label(root, textvariable=error_text_variable)
 
     def settings():
-        print("hi")
+        subprocess.call('config.yaml', shell=True)
+        load_config()
+        render_info()
 
     def next_screen():
         # New Window
