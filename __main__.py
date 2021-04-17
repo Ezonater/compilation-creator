@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import subprocess
-
 import yaml
 import threading
 import os
@@ -146,7 +145,7 @@ def root_program():
         p = subprocess.Popen(['youtube-dlc', '--format', 'bestaudio', '-o',
                               os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
                               '--extract-audio',
-                              '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), playlist], stdout=PIPE,
+                              '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), '-ciw', playlist], stdout=PIPE,
                              stderr=PIPE, creationflags=CREATE_NO_WINDOW)
 
         # Progress Bar
