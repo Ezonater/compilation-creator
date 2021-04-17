@@ -4,22 +4,15 @@ import subprocess
 
 import yaml
 import threading
-import youtube_dlc
 import os
-import ffmpeg
 import tkinter as tk
 import datetime
 import math
 import time
-import collections
-import copy
-import shlex
-import progress
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
 from subprocess import CREATE_NO_WINDOW, PIPE, STDOUT
-from progress.bar import Bar
 from tkinter import ttk
 
 current_playlist = None
