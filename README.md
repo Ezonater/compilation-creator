@@ -19,7 +19,6 @@ The program is pretty self-explanatory, however I thought it would be best to st
 # Limitations
 This program is pretty limiting. Here are some of the limits put in place as of 4/16/2021:
 - You may only use one photo for the entire compilation
-- You cannot choose the order of the tracks (to fix)
 
 # Background
 This program is made possible by youtube-dlc and ffmpeg.
