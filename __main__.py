@@ -23,6 +23,7 @@ video_bitrate = 1000000
 audio_bitrate = 128000
 generate_timestamps = False
 keep_order = True
+ignore_playlist = False
 
 currently_rendering = False
 
@@ -306,7 +307,8 @@ def root_program():
             if filename.endswith('.mp3'):
                 os.remove(tracklist + '\\' + filename)
 
-        os.remove("concat.txt")
+        if os.path.isfile("concat.txt"):
+            os.remove("concat.txt")
 
         # Stop the count
         count.stop()
@@ -319,8 +321,12 @@ def root_program():
         global current_thumbnail
         global currently_rendering
         global generate_timestamps
+        global ignore_playlist
 
         currently_rendering = True
+
+        if not ignore_playlist:
+            clean_up()
 
         # Initialize new variables so the user may play with the variables while rendering
         this_playlist = current_playlist
