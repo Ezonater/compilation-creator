@@ -1,4 +1,4 @@
-# compilation-creator
+# Compilation++
 
 Have you ever wanted to create your own compilation for YouTube, but don't have the video editing software to do so?
 Here's your chance to make high quality compilations without paid software!
