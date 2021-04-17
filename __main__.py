@@ -13,10 +13,14 @@ import math
 import time
 import collections
 import copy
+import shlex
+import progress
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
-from subprocess import CREATE_NO_WINDOW
+from subprocess import CREATE_NO_WINDOW, PIPE, STDOUT
+from progress.bar import Bar
+from tkinter import ttk
 
 current_playlist = None
 current_thumbnail = None
@@ -47,6 +51,7 @@ def load_config():
         video_bitrate = config['video_bitrate']
         audio_bitrate = config['audio_bitrate']
         print(generate_timestamps)
+        print(keep_order)
 
 
 load_config()
@@ -64,9 +69,11 @@ def root_program():
     root.iconphoto(False, tk.PhotoImage(file="icon.png"))
 
     def render_info():
+        print(keep_order)
         start_label.config(
             text="Title: " + title_entry.get() + "\nPlaylist: " + playlist_entry.get() + "\nThumbnail: " + current_thumbnail + "\n" + "\nVideo Bitrate: " + str(
-                video_bitrate) + "\nAudio Bitrate: " + str(audio_bitrate) + "\nGenerate Timestamps: " + str(generate_timestamps)) + "\nPerserve Playlist Order: " + str(keep_order)
+                video_bitrate) + "\nAudio Bitrate: " + str(audio_bitrate) + "\nGenerate Timestamps: " + str(
+                generate_timestamps) + "\nPerserve Playlist Order: " + str(keep_order))
 
     def check_start_button():
         if (playlist_entry.get() != "") & (title_entry.get() != "") & (current_thumbnail is not None) & (
@@ -142,9 +149,33 @@ def root_program():
         count.start()
 
         # Downloading the videos
-        subprocess.call(['youtube-dlc', '--format', 'bestaudio', '-o',
-                         os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x', '--extract-audio',
-                         '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), playlist], creationflags=CREATE_NO_WINDOW)
+        p = subprocess.Popen(['youtube-dlc', '--format', 'bestaudio', '-o',
+                              os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
+                              '--extract-audio',
+                              '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), playlist], stdout=PIPE,
+                             stderr=PIPE, creationflags=CREATE_NO_WINDOW)
+
+        # Progress Bar
+        total_download = 0
+        current_download = tk.DoubleVar()
+        bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=current_download)
+        bar.pack()
+        completed_out_of_label = tk.Label(root, text=str(int(current_download.get())) + "/" + str(total_download))
+        completed_out_of_label.pack()
+        for line in p.stdout:
+            print(line)
+            string_line = str(line)
+            if string_line.startswith('b\'[download] Downloading video'):
+                numbers = string_line[string_line.index('video') + 6:len(string_line) - 3]
+                current_download.set(int(numbers[:numbers.index('of') - 1]))
+                total_download = int(numbers[numbers.index('of') + 3:])
+                bar.config(maximum=total_download)
+                completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(total_download))
+                root.update_idletasks()
+        for line in p.stderr:
+            print(str(line))
+        bar.forget()
+        completed_out_of_label.forget()
 
         # Stop the count
         count.stop()

@@ -1,7 +1,13 @@
+keep_order: True
+ # keeps the order of the playlist. [True/False]
+ # if disabled, playlists will compile in alphabetical order.
+
 generate_timestamps: True
  # generates a text file full of timestamps. [True/False]
-video_bitrate: 2000000
- # defines the video bitrate for the compilation. [408p: 500000, 720p: 1000000, *1080p: 2000000, 4K: 4000000, Insane: 8000000]
+
+video_bitrate: 4000000
+ # defines the video bitrate for the compilation. [408p: 100000, 720p: 2000000, *1080p: 4000000, 4K: 8000000, Insane: 16000000]
+
 audio_bitrate: 256000
  # defines the audio bitrate for the compilation. Recommended settings: [128000, *256000, 384000, 512000]
  #
