@@ -11,7 +11,7 @@ import time
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
-from subprocess import CREATE_NO_WINDOW, PIPE, STDOUT
+from subprocess import CREATE_NO_WINDOW, PIPE
 from tkinter import ttk
 
 current_playlist = None
@@ -146,8 +146,8 @@ def root_program():
         p = subprocess.Popen(['youtube-dlc', '--format', 'bestaudio', '-o',
                               os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
                               '--extract-audio',
-                              '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), '-ciw', playlist], stdout=PIPE,
-                             stderr=PIPE, creationflags=CREATE_NO_WINDOW)
+                              '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), '-ciw', playlist],
+                             stdin=PIPE, stderr=PIPE, stdout=PIPE, creationflags=CREATE_NO_WINDOW)
 
         # Progress Bar
         global tracklist_size
@@ -167,8 +167,6 @@ def root_program():
                 bar.config(maximum=tracklist_size)
                 completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
-        for line in p.stderr:
-            print(str(line))
         bar.forget()
         completed_out_of_label.forget()
 
@@ -221,24 +219,23 @@ def root_program():
         # Generate mp3 videos
         global tracklist_size
         count_variable = tk.DoubleVar()
-        bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=count_variable, maximum=tracklist_size)
+        bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=count_variable,
+                              maximum=tracklist_size)
         bar.pack()
         completed_out_of_label = tk.Label(root, text=str(int(count_variable.get())) + "/" + str(tracklist_size))
         completed_out_of_label.pack()
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
-                p = subprocess.Popen(['ffpb', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
-                                 str(audio_bitrate),
-                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], stderr=PIPE,
-                                creationflags=CREATE_NO_WINDOW)
-                for line in p.stderr:
-                    print(line)
-                    count_variable.set(count_variable.get()+1)
-                    completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
-                    root.update_idletasks()
+                subprocess.call(
+                    ['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
+                     str(audio_bitrate),
+                     str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
+                count_variable.set(count_variable.get() + 1)
+                completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
+                root.update_idletasks()
+
         bar.forget()
         completed_out_of_label.forget()
-
 
         # Stop the count
         count.stop()
@@ -360,7 +357,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: 0.0.2")
+    version_label = tk.Label(root, text="Version Number: 0.1.0")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
