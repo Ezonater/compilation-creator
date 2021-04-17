@@ -26,6 +26,7 @@ current_title = None
 video_bitrate = 1000000
 audio_bitrate = 128000
 generate_timestamps = False
+keep_order = True
 
 currently_rendering = False
 
@@ -35,11 +36,13 @@ tracklist = os.getcwd() + '\\tracklist'
 
 # Useful functions
 def load_config():
+    global keep_order
     global generate_timestamps
     global video_bitrate
     global audio_bitrate
     with open(os.getcwd() + '\\config.yaml') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
+        keep_order = config['keep_order']
         generate_timestamps = config['generate_timestamps']
         video_bitrate = config['video_bitrate']
         audio_bitrate = config['audio_bitrate']
@@ -63,8 +66,7 @@ def root_program():
     def render_info():
         start_label.config(
             text="Title: " + title_entry.get() + "\nPlaylist: " + playlist_entry.get() + "\nThumbnail: " + current_thumbnail + "\n" + "\nVideo Bitrate: " + str(
-                video_bitrate) + "\nAudio Bitrate: " + str(audio_bitrate) + "\nGenerate Timestamps?: " + str(
-                generate_timestamps))
+                video_bitrate) + "\nAudio Bitrate: " + str(audio_bitrate) + "\nGenerate Timestamps: " + str(generate_timestamps)) + "\nPerserve Playlist Order: " + str(keep_order)
 
     def check_start_button():
         if (playlist_entry.get() != "") & (title_entry.get() != "") & (current_thumbnail is not None) & (
@@ -131,7 +133,8 @@ def root_program():
 
         def stop(self):
             self.continue_count = False
-            self.count_label.forget()
+            if self.count_label is not None:
+                self.count_label.forget()
 
     def playlist_download(playlist):
         # Start the count
@@ -139,19 +142,9 @@ def root_program():
         count.start()
 
         # Downloading the videos
-        ydl_opts = {
-            'format': 'bestaudio/best',
-            'outtmpl': os.getcwd() + '\\tracklist\\%(title)s.%(ext)s',
-            # 'simulate': 'true',
-            # ONLY TURN THIS OFF WHEN DEBUGGING AND YOU ALREADY HAVE MP3s
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-                'preferredquality': '256',
-            }],
-        }
-        with youtube_dlc.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([playlist])
+        subprocess.call(['youtube-dlc', '--format', 'bestaudio', '-o',
+                         os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x', '--extract-audio',
+                         '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), playlist], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -171,8 +164,12 @@ def root_program():
                 elapsed_time += MP3(os.getcwd() + '\\tracklist\\' + track).info.length
                 print(timestamp)
                 f = open("tracklist.txt", "a", encoding='utf-8')
-                f.write(timestamp + ' - ' + os.path.splitext(os.path.basename(track))[0] + '\n')
+                trackname = os.path.splitext(os.path.basename(track))[0]
+                if keep_order:
+                    trackname = trackname[trackname.index('-') + 1:]
+                f.write(timestamp + ' - ' + trackname + '\n')
                 f.close()
+
         # Stop the count
         count.stop()
         del count
@@ -182,11 +179,10 @@ def root_program():
         count = Count("Generating thumbnail")
         count.start()
 
-        completelist = []
-
         # Generate thumbnail video
         subprocess.call(['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(
-            os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
+            os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')],
+                        creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -201,7 +197,8 @@ def root_program():
             if filename.endswith('.mp3'):
                 subprocess.call(['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
                                  str(audio_bitrate),
-                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
+                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')],
+                                creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -219,12 +216,11 @@ def root_program():
                 entry += filename.replace("\'", "\'\\\'\'")
                 entry += '\'\n'
                 f.write(entry)
-                subprocess.call(['ffmpeg',
-                                 '-i',
-                                 str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
-                                 '-i', str(tracklist + '\\mp4\\' + filename),
-                                 '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate),
-                                 '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)], creationflags=CREATE_NO_WINDOW)
+                subprocess.call(
+                    ['ffmpeg', '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
+                     '-i', str(tracklist + '\\mp4\\' + filename), '-b:v', str(video_bitrate), '-b:a',
+                     str(audio_bitrate), '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)],
+                    creationflags=CREATE_NO_WINDOW)
                 f.close()
 
         # Stop the count
@@ -236,7 +232,8 @@ def root_program():
         count.start()
 
         # Concatenate
-        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], creationflags=CREATE_NO_WINDOW)
+        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'],
+                        creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
