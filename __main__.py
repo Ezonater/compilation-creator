@@ -34,8 +34,9 @@ keep_order = True
 
 currently_rendering = False
 
-# Shortcuts
+# Shortcuts / Helpful info
 tracklist = os.getcwd() + '\\tracklist'
+tracklist_size = 0
 
 
 # Useful functions
@@ -156,11 +157,12 @@ def root_program():
                              stderr=PIPE, creationflags=CREATE_NO_WINDOW)
 
         # Progress Bar
-        total_download = 0
+        global tracklist_size
+        tracklist_size = 0
         current_download = tk.DoubleVar()
         bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=current_download)
         bar.pack()
-        completed_out_of_label = tk.Label(root, text=str(int(current_download.get())) + "/" + str(total_download))
+        completed_out_of_label = tk.Label(root, text=str(int(current_download.get())) + "/" + str(tracklist_size))
         completed_out_of_label.pack()
         for line in p.stdout:
             print(line)
@@ -168,9 +170,9 @@ def root_program():
             if string_line.startswith('b\'[download] Downloading video'):
                 numbers = string_line[string_line.index('video') + 6:len(string_line) - 3]
                 current_download.set(int(numbers[:numbers.index('of') - 1]))
-                total_download = int(numbers[numbers.index('of') + 3:])
-                bar.config(maximum=total_download)
-                completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(total_download))
+                tracklist_size = int(numbers[numbers.index('of') + 3:])
+                bar.config(maximum=tracklist_size)
+                completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
         for line in p.stderr:
             print(str(line))
@@ -224,12 +226,26 @@ def root_program():
         count.start()
 
         # Generate mp3 videos
+        global tracklist_size
+        count_variable = tk.DoubleVar()
+        bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=count_variable, maximum=tracklist_size)
+        bar.pack()
+        completed_out_of_label = tk.Label(root, text=str(int(count_variable.get())) + "/" + str(tracklist_size))
+        completed_out_of_label.pack()
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
-                subprocess.call(['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
+                p = subprocess.Popen(['ffpb', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
                                  str(audio_bitrate),
-                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')],
+                                 str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], stderr=PIPE,
                                 creationflags=CREATE_NO_WINDOW)
+                for line in p.stderr:
+                    print(line)
+                    count_variable.set(count_variable.get()+1)
+                    completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
+                    root.update_idletasks()
+        bar.forget()
+        completed_out_of_label.forget()
+
 
         # Stop the count
         count.stop()
