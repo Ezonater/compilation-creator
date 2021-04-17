@@ -189,13 +189,7 @@ def root_program():
         completelist = []
 
         # Generate thumbnail video
-        (
-            ffmpeg
-                .input(thumbnail)
-                .output(os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4',
-                audio_bitrate=audio_bitrate, video_bitrate=video_bitrate, loglevel="quiet")
-                .run()
-        )
+        subprocess.call(['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')], CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -208,14 +202,8 @@ def root_program():
         # Generate mp3 videos
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
-                (
-                    ffmpeg
-                        .input(tracklist + '\\' + filename)
-                        .output(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4',
-                                audio_bitrate=audio_bitrate,
-                                video_bitrate=video_bitrate, loglevel="quiet")
-                        .run()
-                )
+                subprocess.call(['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], CREATE_NO_WINDOW)
+
         # Stop the count
         count.stop()
         del count
@@ -227,28 +215,28 @@ def root_program():
         # Generate thumbnail + mp3 videos
         for filename in os.listdir(tracklist + '\\mp4'):
             if filename.endswith('.mp4'):
-                video_video = ffmpeg.input(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0])
-                audio_video = ffmpeg.input(tracklist + '\\mp4\\' + filename)
-                v1 = video_video.video
-                a1 = audio_video.audio
-                ffmpeg.output(v1, a1, tracklist + '\\mp4\\full\\' + filename, audio_bitrate=audio_bitrate,
-                              video_bitrate=video_bitrate, loglevel="quiet").run()
-                completelist.append(v1)
-                completelist.append(a1)
+                f = open("concat.txt", "a", encoding='utf-8')
+                entry = 'file ' + '\'' + tracklist + '\\mp4\\full\\'
+                entry += filename.replace("\'", "\'\\\'\'")
+                entry +=  '\'\n'
+                f.write(entry)
+                subprocess.call(['ffmpeg',
+                                 '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
+                                 '-i', str(tracklist + '\\mp4\\' + filename),
+                                 '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate),
+                                 '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)], CREATE_NO_WINDOW)
+                f.close()
 
         # Stop the count
         count.stop()
         del count
 
         # Start the count
-        count = Count("Concatenating videos... This one will take a while")
+        count = Count("Concatenating videos")
         count.start()
 
         # Concatenate
-        joined = ffmpeg.concat(*completelist, v=1, a=1).node
-        v3 = joined[0]
-        a3 = joined[1]
-        ffmpeg.output(v3, a3, title + '.mp4', audio_bitrate=audio_bitrate, video_bitrate=video_bitrate, loglevel="quiet").run()
+        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -281,6 +269,8 @@ def root_program():
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
                 os.remove(tracklist + '\\' + filename)
+
+        os.remove("concat.txt")
 
         # Stop the count
         count.stop()
