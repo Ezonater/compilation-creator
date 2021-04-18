@@ -173,16 +173,16 @@ def root_program():
                 bar.config(maximum=tracklist_size)
                 completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
-        #for line in p.stderr:
-            #print(line)
-            #string_line = str(line)
-            #if string_line.startswith('b\'ERROR: Unable to download webpage:'):
-                #ip_type = ip_types[ip_types.index(ip_type)+1]
-                #bar.forget()
-                #completed_out_of_label.forget()
-                #count.stop()
-                #del count
-                #playlist_download(playlist)
+        for line in p.stderr:
+            print(line)
+            # string_line = str(line)
+            # if string_line.startswith('b\'ERROR: Unable to download webpage:'):
+            # ip_type = ip_types[ip_types.index(ip_type)+1]
+            # bar.forget()
+            # completed_out_of_label.forget()
+            # count.stop()
+            # del count
+            # playlist_download(playlist)
         bar.forget()
         completed_out_of_label.forget()
 
@@ -244,11 +244,16 @@ def root_program():
         completed_out_of_label.pack()
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
-                subprocess.call(
+                p = subprocess.Popen(
                     ['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
                      str(audio_bitrate),
                      str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')],
+                    stdin=PIPE, stderr=PIPE, stdout=PIPE,
                     creationflags=CREATE_NO_WINDOW)
+                for line in p.stdout:
+                    print(line)
+                for line in p.stderr:
+                    print(line)
                 count_variable.set(count_variable.get() + 1)
                 completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
@@ -289,8 +294,8 @@ def root_program():
         count.start()
 
         # Concatenate
-        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'],
-                        creationflags=CREATE_NO_WINDOW)
+        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'])
+
 
         # Stop the count
         count.stop()
@@ -315,10 +320,10 @@ def root_program():
             if filename.endswith('.mp4'):
                 os.remove(os.getcwd() + '\\thumbnail\\' + filename)
 
-        for filename in os.listdir(os.getcwd()):
-            if filename.endswith('.mp4'):
-                if filename != (current_title + '.mp4'):
-                    os.remove(os.getcwd() + '\\' + filename)
+        #for filename in os.listdir(os.getcwd()):
+            #if filename.endswith('.mp4'):
+                #if filename != (current_title + '.mp4'):
+                    #os.remove(os.getcwd() + '\\' + filename)
 
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
@@ -377,7 +382,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: 0.1.1")
+    version_label = tk.Label(root, text="Version Number: 0.1.3")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
