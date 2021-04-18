@@ -24,6 +24,8 @@ audio_bitrate = 128000
 generate_timestamps = False
 keep_order = True
 ignore_playlist = False
+ip_type = ""
+# ip_types = ["", "-4", "-6"]
 
 currently_rendering = False
 
@@ -38,12 +40,14 @@ def load_config():
     global generate_timestamps
     global video_bitrate
     global audio_bitrate
+    global ip_type
     with open(os.getcwd() + '\\config.yaml') as file:
         config = yaml.load(file, Loader=yaml.FullLoader)
         keep_order = config['keep_order']
         generate_timestamps = config['generate_timestamps']
         video_bitrate = config['video_bitrate']
         audio_bitrate = config['audio_bitrate']
+        ip_type = config['ip_type']
         print(generate_timestamps)
         print(keep_order)
 
@@ -138,12 +142,14 @@ def root_program():
                 self.count_label.forget()
 
     def playlist_download(playlist):
+        global ip_type
+        print(ip_type)
         # Start the count
         count = Count("Downloading mp3s from playlist")
         count.start()
 
         # Downloading the videos
-        p = subprocess.Popen(['youtube-dlc', '--format', 'bestaudio', '-o',
+        p = subprocess.Popen(['youtube-dlc', ip_type, '--format', 'bestaudio', '-o',
                               os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
                               '--extract-audio',
                               '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), '-ciw', playlist],
@@ -167,6 +173,16 @@ def root_program():
                 bar.config(maximum=tracklist_size)
                 completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
+        #for line in p.stderr:
+            #print(line)
+            #string_line = str(line)
+            #if string_line.startswith('b\'ERROR: Unable to download webpage:'):
+                #ip_type = ip_types[ip_types.index(ip_type)+1]
+                #bar.forget()
+                #completed_out_of_label.forget()
+                #count.stop()
+                #del count
+                #playlist_download(playlist)
         bar.forget()
         completed_out_of_label.forget()
 
@@ -204,9 +220,11 @@ def root_program():
         count.start()
 
         # Generate thumbnail video
-        subprocess.call(['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), str(
-            os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')],
-                        creationflags=CREATE_NO_WINDOW)
+        subprocess.call(
+            ['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',
+             'yuv420p', str(
+                os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')],
+            creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -229,7 +247,8 @@ def root_program():
                 subprocess.call(
                     ['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
                      str(audio_bitrate),
-                     str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')], creationflags=CREATE_NO_WINDOW)
+                     str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')],
+                    creationflags=CREATE_NO_WINDOW)
                 count_variable.set(count_variable.get() + 1)
                 completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
@@ -256,7 +275,8 @@ def root_program():
                 subprocess.call(
                     ['ffmpeg', '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
                      '-i', str(tracklist + '\\mp4\\' + filename), '-b:v', str(video_bitrate), '-b:a',
-                     str(audio_bitrate), '-c', 'copy', str(tracklist + '\\mp4\\full\\' + filename)],
+                     str(audio_bitrate), '-pix_fmt', 'yuv420p', '-c', 'copy',
+                     str(tracklist + '\\mp4\\full\\' + filename)],
                     creationflags=CREATE_NO_WINDOW)
                 f.close()
 
@@ -357,7 +377,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: 0.1.0")
+    version_label = tk.Label(root, text="Version Number: 0.1.1")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",

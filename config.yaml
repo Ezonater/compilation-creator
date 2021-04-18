@@ -12,3 +12,6 @@ audio_bitrate: 256000
  # defines the audio bitrate for the compilation. Recommended settings: [128000, *256000, 384000, 512000]
  #
  # * = recommended setting
+
+ip_type: ""
+ # used for debugging purposes. ["", "-4", "-6"]
