@@ -25,7 +25,7 @@ generate_timestamps = False
 keep_order = True
 ignore_playlist = False
 ip_type = ""
-ip_types = ["", "-4", "-6", "", "-4", "-6"]
+#ip_types = ["", "-4", "-6", "", "-4", "-6"]
 
 currently_rendering = False
 
@@ -149,6 +149,7 @@ def root_program():
         count.start()
 
         # Downloading the videos
+
         p = subprocess.Popen(['youtube-dlc', ip_type, '--format', 'bestaudio', '-o',
                               os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
                               '--extract-audio',
@@ -173,16 +174,6 @@ def root_program():
                 bar.config(maximum=tracklist_size)
                 completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
-        for line in p.stderr:
-            print(line)
-            string_line = str(line)
-            if string_line.startswith('b\'ERROR: Unable to download webpage:'):
-                ip_type = ip_types[ip_types.index(ip_type)+1]
-                bar.forget()
-                completed_out_of_label.forget()
-                count.stop()
-                del count
-                playlist_download(playlist)
         bar.forget()
         completed_out_of_label.forget()
 
@@ -191,10 +182,6 @@ def root_program():
         del count
 
     def generate_tracklist():
-        # Start the count
-        count = Count("Generating tracklist")
-        count.start()
-
         elapsed_time = 0
         f = open('tracklist.txt', 'w')
         f.close()
@@ -210,121 +197,40 @@ def root_program():
                 f.write(timestamp + ' - ' + trackname + '\n')
                 f.close()
 
-        # Stop the count
-        count.stop()
-        del count
-
     def compile(thumbnail, title):
         # Start the count
-        count = Count("Generating thumbnail")
+        count = Count("Concatenating .mp3 videos")
         count.start()
 
-        # Generate thumbnail video
-        subprocess.run(
-            ['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',
-             'yuv420p', str(
-                os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')],
-            creationflags=CREATE_NO_WINDOW)
-
-        # Stop the count
-        count.stop()
-        del count
-
-        # Start the count
-        count = Count("Generating mp3 videos")
-        count.start()
-
-        # Generate mp3 videos
-        global tracklist_size
-        count_variable = tk.DoubleVar()
-        bar = ttk.Progressbar(root, orient=tk.HORIZONTAL, length=200, mode='determinate', variable=count_variable,
-                              maximum=tracklist_size)
-        bar.pack()
-        completed_out_of_label = tk.Label(root, text=str(int(count_variable.get())) + "/" + str(tracklist_size))
-        completed_out_of_label.pack()
-        for filename in os.listdir(tracklist):
+        # Concat mp4s
+        for filename in os.listdir(os.getcwd() + "\\tracklist"):
             if filename.endswith('.mp3'):
-                p = subprocess.Popen(
-                    ['ffmpeg', '-i', str(tracklist + '\\' + filename), '-b:v', str(video_bitrate), '-b:a',
-                     str(audio_bitrate),
-                     str(tracklist + '\\mp4\\' + os.path.splitext(filename)[0] + '.mp4')],
-                    stdin=PIPE, stderr=PIPE, stdout=PIPE,
-                    creationflags=CREATE_NO_WINDOW)
-                for line in p.stdout:
-                    print(line)
-                for line in p.stderr:
-                    print(line)
-                count_variable.set(count_variable.get() + 1)
-                completed_out_of_label.config(text=str(int(count_variable.get())) + "/" + str(tracklist_size))
-                root.update_idletasks()
-
-        bar.forget()
-        completed_out_of_label.forget()
-
-        # Stop the count
-        count.stop()
-        del count
-
-        # Start the count
-        count = Count("Generating mp3 + thumbnail videos")
-        count.start()
-
-        # Generate thumbnail + mp3 videos
-        for filename in os.listdir(tracklist + '\\mp4'):
-            if filename.endswith('.mp4'):
                 f = open("concat.txt", "a", encoding='utf-8')
-                entry = 'file ' + '\'' + tracklist + "\\mp4\\full\\"
+                entry = 'file ' + '\'' + os.getcwd() + '\\tracklist\\'
                 entry += filename.replace("\'", "\'\\\'\'")
                 entry += '\'\n'
                 f.write(entry)
-                subprocess.run(
-                    ['ffmpeg', '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
-                     '-i', str(tracklist + '\\mp4\\' + filename), '-b:v', str(video_bitrate), '-b:a',
-                     str(audio_bitrate), '-pix_fmt', 'yuv420p', '-c', 'copy',
-                     str(tracklist + '\\mp4\\full\\' + filename)], creationflags=CREATE_NO_WINDOW)
                 f.close()
+
+        subprocess.run(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', "concat.txt", 'big_audio.mp3'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
         del count
 
         # Start the count
-        count = Count("Concatenating videos")
+        count = Count("Generating \"" + title + ".mp4\"")
         count.start()
 
-        time.sleep(5)
-
-        # Concatenate
-        subprocess.run(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], creationflags=CREATE_NO_WINDOW)
-
+        #subprocess.run(['ffmpeg', '-loop', '1', '-r', '1', '-i', thumbnail, '-i', 'big_audio.mp3', '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate),'-c:v', 'libx264', '-c:a', 'copy', '-pix_fmt', 'yuv420p', '-vf', 'crop=trunc(iw/2)*2:trunc(ih/2)*2', title + '.mp4'])
+        subprocess.run(['ffmpeg', '-loop', '1', '-framerate', '1', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264', '-c:a', 'aac','-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt', 'yuv420p', '-vf','crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
         del count
 
     def clean_up(title):
-        # Start the count
-        count = Count("Clean up files")
-        count.start()
-
         # Clean up, clean up. Everybody do your share.
-
-        for filename in os.listdir(tracklist + '\\mp4'):
-            if filename.endswith('.mp4'):
-                os.remove(tracklist + '\\mp4\\' + filename)
-
-        for filename in os.listdir(tracklist + '\\mp4\\full'):
-            if filename.endswith('.mp4'):
-                os.remove(tracklist + '\\mp4\\full\\' + filename)
-
-        for filename in os.listdir(os.getcwd() + '\\thumbnail'):
-            if filename.endswith('.mp4'):
-                os.remove(os.getcwd() + '\\thumbnail\\' + filename)
-
-        for filename in os.listdir(os.getcwd()):
-            if filename.endswith('.mp4'):
-                if filename != (title + '.mp4'):
-                    os.remove(os.getcwd() + '\\' + filename)
 
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
@@ -333,9 +239,8 @@ def root_program():
         if os.path.isfile("concat.txt"):
             os.remove("concat.txt")
 
-        # Stop the count
-        count.stop()
-        del count
+        if os.path.isfile("big_audio.mp3"):
+            os.remove("big_audio.mp3")
 
     def start_compiling():
         # Grab globals
@@ -385,7 +290,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: 0.1.5")
+    version_label = tk.Label(root, text="Version Number: v0.1.6")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
