@@ -25,7 +25,7 @@ generate_timestamps = False
 keep_order = True
 ignore_playlist = False
 ip_type = ""
-# ip_types = ["", "-4", "-6"]
+ip_types = ["", "-4", "-6", "", "-4", "-6"]
 
 currently_rendering = False
 
@@ -175,14 +175,14 @@ def root_program():
                 root.update_idletasks()
         for line in p.stderr:
             print(line)
-            # string_line = str(line)
-            # if string_line.startswith('b\'ERROR: Unable to download webpage:'):
-            # ip_type = ip_types[ip_types.index(ip_type)+1]
-            # bar.forget()
-            # completed_out_of_label.forget()
-            # count.stop()
-            # del count
-            # playlist_download(playlist)
+            string_line = str(line)
+            if string_line.startswith('b\'ERROR: Unable to download webpage:'):
+                ip_type = ip_types[ip_types.index(ip_type)+1]
+                bar.forget()
+                completed_out_of_label.forget()
+                count.stop()
+                del count
+                playlist_download(playlist)
         bar.forget()
         completed_out_of_label.forget()
 
@@ -220,7 +220,7 @@ def root_program():
         count.start()
 
         # Generate thumbnail video
-        subprocess.call(
+        subprocess.run(
             ['ffmpeg', '-i', str(thumbnail), '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',
              'yuv420p', str(
                 os.getcwd() + '\\thumbnail\\' + os.path.splitext(os.path.basename(thumbnail))[0] + '.mp4')],
@@ -273,16 +273,15 @@ def root_program():
         for filename in os.listdir(tracklist + '\\mp4'):
             if filename.endswith('.mp4'):
                 f = open("concat.txt", "a", encoding='utf-8')
-                entry = 'file ' + '\'' + tracklist + '\\mp4\\full\\'
+                entry = 'file ' + '\'' + tracklist + "\\mp4\\full\\"
                 entry += filename.replace("\'", "\'\\\'\'")
                 entry += '\'\n'
                 f.write(entry)
-                subprocess.call(
+                subprocess.run(
                     ['ffmpeg', '-i', str(os.getcwd() + '\\thumbnail\\' + os.listdir(os.getcwd() + '\\thumbnail\\')[0]),
                      '-i', str(tracklist + '\\mp4\\' + filename), '-b:v', str(video_bitrate), '-b:a',
                      str(audio_bitrate), '-pix_fmt', 'yuv420p', '-c', 'copy',
-                     str(tracklist + '\\mp4\\full\\' + filename)],
-                    creationflags=CREATE_NO_WINDOW)
+                     str(tracklist + '\\mp4\\full\\' + filename)], creationflags=CREATE_NO_WINDOW)
                 f.close()
 
         # Stop the count
@@ -293,15 +292,17 @@ def root_program():
         count = Count("Concatenating videos")
         count.start()
 
+        time.sleep(5)
+
         # Concatenate
-        subprocess.call(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'])
+        subprocess.run(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', 'concat.txt', '-c', 'copy', str(title) + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
 
         # Stop the count
         count.stop()
         del count
 
-    def clean_up():
+    def clean_up(title):
         # Start the count
         count = Count("Clean up files")
         count.start()
@@ -320,10 +321,10 @@ def root_program():
             if filename.endswith('.mp4'):
                 os.remove(os.getcwd() + '\\thumbnail\\' + filename)
 
-        #for filename in os.listdir(os.getcwd()):
-            #if filename.endswith('.mp4'):
-                #if filename != (current_title + '.mp4'):
-                    #os.remove(os.getcwd() + '\\' + filename)
+        for filename in os.listdir(os.getcwd()):
+            if filename.endswith('.mp4'):
+                if filename != (title + '.mp4'):
+                    os.remove(os.getcwd() + '\\' + filename)
 
         for filename in os.listdir(tracklist):
             if filename.endswith('.mp3'):
@@ -347,23 +348,25 @@ def root_program():
 
         currently_rendering = True
 
-        if not ignore_playlist:
-            clean_up()
-
         # Initialize new variables so the user may play with the variables while rendering
         this_playlist = current_playlist
         this_title = current_title
         this_thumbnail = current_thumbnail
 
+        if not ignore_playlist:
+            clean_up(this_title)
+
         # Deactivate UI
         start_button.config(state=tk.DISABLED)
 
         # Run main functions
+        clean_up(this_title)
         playlist_download(this_playlist)
         if generate_timestamps:
             generate_tracklist()
         compile(this_thumbnail, this_title)
-        clean_up()
+        time.sleep(5)
+        clean_up(this_title)
 
         # Reactivate UI
         start_button.config(state=tk.NORMAL)
@@ -382,7 +385,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: 0.1.3")
+    version_label = tk.Label(root, text="Version Number: 0.1.5")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
