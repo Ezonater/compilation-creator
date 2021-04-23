@@ -25,7 +25,7 @@ generate_timestamps = False
 keep_order = True
 ignore_playlist = False
 ip_type = ""
-#ip_types = ["", "-4", "-6", "", "-4", "-6"]
+ip_types = ["", "-4", "-6", "", "-4", "-6"]
 
 currently_rendering = False
 
@@ -141,22 +141,21 @@ def root_program():
             if self.count_label is not None:
                 self.count_label.forget()
 
-    def playlist_download(playlist):
+    def playlist_download(playlist, ip):
         global ip_type
         print(ip_type)
         # Start the count
         count = Count("Downloading mp3s from playlist")
         count.start()
 
-        # Downloading the videos
-
-        p = subprocess.Popen(['youtube-dlc', ip_type, '--format', 'bestaudio', '-o',
+        p = subprocess.Popen(['youtube-dlc', ip, '--format', 'bestaudio', '-o',
                               os.getcwd() + '\\tracklist\\%(playlist_index)s-%(title)s.%(ext)s', '-x',
                               '--extract-audio',
                               '--audio-format', 'mp3', '--audio-quality', str(audio_bitrate), '-ciw', playlist],
                              stdin=PIPE, stderr=PIPE, stdout=PIPE, creationflags=CREATE_NO_WINDOW)
 
         # Progress Bar
+        print(ip)
         global tracklist_size
         tracklist_size = 0
         current_download = tk.DoubleVar()
@@ -174,6 +173,18 @@ def root_program():
                 bar.config(maximum=tracklist_size)
                 completed_out_of_label.config(text=str(int(current_download.get())) + "/" + str(tracklist_size))
                 root.update_idletasks()
+        for line in p.stderr:
+            print(line)
+            string_line = str(line)
+            if string_line.startswith("b\'ERROR: Unable to download webpage: "):
+                print(ip_types.index(ip))
+                bar.forget()
+                completed_out_of_label.forget()
+                count.stop()
+                del count
+                playlist_download(playlist, ip_types[ip_types.index(ip)+1])
+                return
+
         bar.forget()
         completed_out_of_label.forget()
 
@@ -222,7 +233,6 @@ def root_program():
         count = Count("Generating \"" + title + ".mp4\"")
         count.start()
 
-        #subprocess.run(['ffmpeg', '-loop', '1', '-r', '1', '-i', thumbnail, '-i', 'big_audio.mp3', '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate),'-c:v', 'libx264', '-c:a', 'copy', '-pix_fmt', 'yuv420p', '-vf', 'crop=trunc(iw/2)*2:trunc(ih/2)*2', title + '.mp4'])
         subprocess.run(['ffmpeg', '-loop', '1', '-framerate', '1', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264', '-c:a', 'aac','-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt', 'yuv420p', '-vf','crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
@@ -250,6 +260,7 @@ def root_program():
         global currently_rendering
         global generate_timestamps
         global ignore_playlist
+        global ip_type
 
         currently_rendering = True
 
@@ -266,7 +277,7 @@ def root_program():
 
         # Run main functions
         clean_up(this_title)
-        playlist_download(this_playlist)
+        playlist_download(this_playlist, ip_type)
         if generate_timestamps:
             generate_tracklist()
         compile(this_thumbnail, this_title)
