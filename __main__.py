@@ -26,6 +26,7 @@ keep_order = True
 ignore_playlist = False
 ip_type = ""
 ip_types = ["", "-4", "-6", "", "-4", "-6"]
+normalize_audio = True
 
 currently_rendering = False
 
@@ -45,6 +46,7 @@ def load_config():
         config = yaml.load(file, Loader=yaml.FullLoader)
         keep_order = config['keep_order']
         generate_timestamps = config['generate_timestamps']
+        normalize_audio = config['normalize_audio']
         video_bitrate = config['video_bitrate']
         audio_bitrate = config['audio_bitrate']
         ip_type = config['ip_type']
@@ -229,11 +231,24 @@ def root_program():
         count.stop()
         del count
 
+        if normalize_audio:
+            # Start the count
+            count = Count("Normalizing Audio")
+            count.start()
+
+            subprocess.run(['ffmpeg', '-i', 'big_audio.mp3', '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm', 'normalized_audio.mp3'])
+            os.remove('big_audio.mp3')
+            os.rename('normalized_audio.mp3', 'big_audio.mp3')
+
+            # Stop the count
+            count.stop()
+            del count
+
         # Start the count
         count = Count("Generating \"" + title + ".mp4\"")
         count.start()
 
-        subprocess.run(['ffmpeg', '-loop', '1', '-framerate', '1', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264', '-c:a', 'aac','-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt', 'yuv420p', '-vf','crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
+        subprocess.run(['ffmpeg', '-y', '-loop', '1', '-framerate', '5', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264', '-tune', 'stillimage', '-c:a', 'aac','-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt', 'yuv420p', '-vf','crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', '-fflags', '+shortest', '-max_interleave_delta', '100M', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -317,9 +332,6 @@ def root_program():
 
     start_label = tk.Label(root, text="Title: " + str(current_title) + "\nPlaylist: " + str(current_playlist), pady=30)
     start_button = tk.Button(root, text="Start!", state=tk.DISABLED, command=start_threading)
-
-    error_text_variable = tk.StringVar()
-    error_label = tk.Label(root, textvariable=error_text_variable)
 
     def settings():
         subprocess.call('config.yaml', shell=True)
