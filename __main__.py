@@ -13,22 +13,26 @@ from tkinter import filedialog
 from mutagen.mp3 import MP3
 from subprocess import CREATE_NO_WINDOW, PIPE
 from tkinter import ttk
+from functools import partial
 
 current_playlist = None
 current_thumbnail = None
 current_title = None
 
 # Default values
+options_dict = {}
+keep_order = True
+generate_timestamps = False
+normalize_audio = True
 video_bitrate = 1000000
 audio_bitrate = 128000
-generate_timestamps = False
-keep_order = True
-ignore_playlist = False
 ip_type = ""
-ip_types = ["", "-4", "-6", "", "-4", "-6"]
-normalize_audio = True
+print(options_dict)
 
-currently_rendering = False
+ignore_playlist = False  # NOT AN OPTION YET
+ip_types = ["", "-4", "-6", "", "-4", "-6"]  # NOT AN OPTION
+
+currently_rendering = False  # Important to disable the start button
 
 # Shortcuts / Helpful info
 tracklist = os.getcwd() + '\\tracklist'
@@ -37,21 +41,22 @@ tracklist_size = 0
 
 # Useful functions
 def load_config():
+    global options_dict
     global keep_order
     global generate_timestamps
+    global normalize_audio
     global video_bitrate
     global audio_bitrate
     global ip_type
-    with open(os.getcwd() + '\\config.yaml') as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
-        keep_order = config['keep_order']
-        generate_timestamps = config['generate_timestamps']
-        normalize_audio = config['normalize_audio']
-        video_bitrate = config['video_bitrate']
-        audio_bitrate = config['audio_bitrate']
-        ip_type = config['ip_type']
-        print(generate_timestamps)
-        print(keep_order)
+    with open('config.yaml') as file:
+        options_dict = yaml.load(file, Loader=yaml.Loader)
+        print(options_dict)
+    keep_order = options_dict['keep_order']
+    generate_timestamps = options_dict['generate_timestamps']
+    normalize_audio = options_dict['normalize_audio']
+    video_bitrate = options_dict['video_bitrate']
+    audio_bitrate = options_dict['audio_bitrate']
+    ip_type = options_dict['ip_type']
 
 
 load_config()
@@ -184,7 +189,7 @@ def root_program():
                 completed_out_of_label.forget()
                 count.stop()
                 del count
-                playlist_download(playlist, ip_types[ip_types.index(ip)+1])
+                playlist_download(playlist, ip_types[ip_types.index(ip) + 1])
                 return
 
         bar.forget()
@@ -225,7 +230,8 @@ def root_program():
                 f.write(entry)
                 f.close()
 
-        subprocess.run(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', "concat.txt", 'big_audio.mp3'], creationflags=CREATE_NO_WINDOW)
+        subprocess.run(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', "concat.txt", 'big_audio.mp3'],
+                       creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -236,7 +242,8 @@ def root_program():
             count = Count("Normalizing Audio")
             count.start()
 
-            subprocess.run(['ffmpeg', '-i', 'big_audio.mp3', '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm', 'normalized_audio.mp3'])
+            subprocess.run(['ffmpeg', '-i', 'big_audio.mp3', '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm',
+                            'normalized_audio.mp3'], creationflags=CREATE_NO_WINDOW)
             os.remove('big_audio.mp3')
             os.rename('normalized_audio.mp3', 'big_audio.mp3')
 
@@ -248,7 +255,11 @@ def root_program():
         count = Count("Generating \"" + title + ".mp4\"")
         count.start()
 
-        subprocess.run(['ffmpeg', '-y', '-loop', '1', '-framerate', '5', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264', '-tune', 'stillimage', '-c:a', 'aac','-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt', 'yuv420p', '-vf','crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', '-fflags', '+shortest', '-max_interleave_delta', '100M', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
+        subprocess.run(
+            ['ffmpeg', '-y', '-loop', '1', '-framerate', '5', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264',
+             '-tune', 'stillimage', '-c:a', 'aac', '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',
+             'yuv420p', '-vf', 'crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', '-fflags',
+             '+shortest', '-max_interleave_delta', '100M', title + '.mp4'], creationflags=CREATE_NO_WINDOW)
 
         # Stop the count
         count.stop()
@@ -289,6 +300,7 @@ def root_program():
 
         # Deactivate UI
         start_button.config(state=tk.DISABLED)
+        fileMenu.entryconfig("Settings", state=tk.DISABLED)
 
         # Run main functions
         clean_up(this_title)
@@ -301,6 +313,7 @@ def root_program():
 
         # Reactivate UI
         start_button.config(state=tk.NORMAL)
+        fileMenu.entryconfig("Settings", state=tk.NORMAL)
 
         currently_rendering = False
 
@@ -316,7 +329,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: v0.1.6")
+    version_label = tk.Label(root, text="Version Number: v0.1.7")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
@@ -333,19 +346,37 @@ def root_program():
     start_label = tk.Label(root, text="Title: " + str(current_title) + "\nPlaylist: " + str(current_playlist), pady=30)
     start_button = tk.Button(root, text="Start!", state=tk.DISABLED, command=start_threading)
 
-    def settings():
-        subprocess.call('config.yaml', shell=True)
-        load_config()
-        render_info()
+    # Menus
+    menubar = tk.Menu(root)
+    root.config(menu=menubar)
+    fileMenu = tk.Menu(menubar)
 
-    def next_screen():
+    def settings():
+        print("Placeholder")
+        # subprocess.call('config.yaml', shell=True)
+        # load_config()
+        # render_info()
+
+    def update_config(option, state, widget):
+        global options_dict
+        if widget == "check":
+            options_dict[option] = bool(state.get())
+        else:
+            options_dict[option] = state.get()
+        with open('config.yaml', 'w') as outfile:
+            yaml.dump(options_dict, outfile, default_flow_style=False)
+        print(options_dict)
+
+    def main_screen():
+        # Clean up
+        for widget in root.pack_slaves():
+            widget.forget()
+
+        for widget in root.grid_slaves():
+            widget.destroy()
+
         # New Window
         root.geometry("600x600")
-
-        # Clean up
-        begin_button.forget()
-        info_label.forget()
-        version_label.forget()
 
         # New objects
         main_label.pack()
@@ -357,14 +388,117 @@ def root_program():
         empty_label.pack()
         start_button.pack()
 
-        # Menus
-        menu = tk.Menu(root)
-        root.config(menu=menu)
-        fileMenu = tk.Menu(menu)
-        menu.add_cascade(label="File", menu=fileMenu)
-        fileMenu.add_command(label="Settings", command=settings)
+    def settings_screen():
+        global options_dict
+        # New Window
+        root.geometry("600x600")
 
-    begin_button = tk.Button(root, text="Begin", command=next_screen)
+        # Clean up
+        for widget in root.pack_slaves():
+            widget.forget()
+
+        # New objects
+        settings_label = tk.Label(root, text="Compilation Settings", font=30, pady=20)
+        settings_label.grid(row=0, column=2)
+        l1 = tk.Label(root)
+        l1.grid(row=1, column=0, pady=10)
+        l2 = tk.Label(root, text="Keep playlist order")
+        l2.grid(row=2, column=0)
+        l3 = tk.Label(root, text="Generate timestamps (.txt)")
+        l3.grid(row=2, column=2)
+        l4 = tk.Label(root, text="Normalize all audio")
+        l4.grid(row=2, column=4)
+        l5 = tk.Label(root, text="Video bitrate")
+        l5.grid(row=5, column=0)
+        l6 = tk.Label(root, text="Audio bitrate")
+        l6.grid(row=5, column=2)
+        l7 = tk.Label(root, text="IPvX (Blank = Default)")
+        l7.grid(row=5, column=4)
+
+        chvar1 = tk.IntVar()
+        chvar1.set(options_dict['keep_order'])
+        ch1 = tk.Checkbutton(root, variable=chvar1)
+        ch1.grid(row=3, column=0)
+        ch1.config(command=partial(update_config, "keep_order", chvar1, "check"))
+
+        chvar2 = tk.IntVar()
+        chvar2.set(options_dict['generate_timestamps'])
+        ch2 = tk.Checkbutton(root, variable=chvar2)
+        ch2.grid(row=3, column=2)
+        ch2.config(command=partial(update_config, "generate_timestamps", chvar2, "check"))
+
+        chvar3 = tk.IntVar()
+        chvar3.set(options_dict['normalize_audio'])
+        ch3 = tk.Checkbutton(root, variable=chvar3)
+        ch3.grid(row=3, column=4)
+        ch3.config(command=partial(update_config, "normalize_audio", chvar3, "check"))
+
+        l8 = tk.Label(root)
+        l8.grid(row=4, column=0, pady=50)
+
+        class Bitrate(tk.Entry):
+            def __init__(self, option, master=None, **kwargs):
+                self.var = tk.StringVar()
+                self.option = option
+                tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
+                self.old_value = ''
+                self.var.trace('w', self.check)
+                self.get, self.set = self.var.get, self.var.set
+
+            def check(self, *args):
+                if self.get().isdigit() or self.get() == "":
+                    # the current value is only digits; allow this
+                    self.old_value = self.get()
+                    update_config(self.option, self.var, "entry")
+                else:
+                    # there's non-digit characters in the input; reject this
+                    self.set(self.old_value)
+
+        # Video Bitrate
+        lotfi1 = Bitrate("video_bitrate", root)
+        lotfi1.var.set(options_dict['video_bitrate'])
+        lotfi1.grid(row=6, column=0)
+
+        # Audio Bitrate
+        lotfi2 = Bitrate("audio_bitrate", root)
+        lotfi2.var.set(options_dict['audio_bitrate'])
+        lotfi2.grid(row=6, column=2)
+
+        # IP Config Setting
+        options = [
+            "",
+            "-4",
+            "-6"
+        ]
+        clicked = tk.StringVar()
+        clicked.set(options_dict['ip_type'])
+        clicked.trace("w", lambda name, index, mode,: update_config("ip_type", clicked, "dropdown"))
+        optnmenu = tk.OptionMenu(root, clicked, *options)
+        optnmenu.grid(row=6, column=4)
+
+        l9 = tk.Label(root)
+        l9.grid(row=7, column=0, pady=50)
+
+
+
+        root.columnconfigure(5, weight=0)
+        root.columnconfigure(4, weight=1)
+        root.columnconfigure(3, weight=1)
+        root.columnconfigure(2, weight=1)
+        root.columnconfigure(1, weight=1)
+        root.columnconfigure(0, weight=1)
+
+
+
+        # Back Button
+        back = tk.Button(root, text="Save and Return to Compiler", command=main_screen)
+        back.grid(row=8, column=2)
+
+    #More Menu stuffs
+    menubar.add_cascade(label="File", menu=fileMenu)
+    fileMenu.add_command(label="Settings", command=settings_screen)
+
+    begin_button = tk.Button(root, text="Begin", command=main_screen)
     info_label.pack()
     begin_button.pack()
     version_label.pack()
