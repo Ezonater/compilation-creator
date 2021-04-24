@@ -1,20 +1,6 @@
-keep_order: True
- # keeps the order of the playlist. [True/False]
- # if disabled, playlists will compile in alphabetical order.
-
-generate_timestamps: True
- # generates a text file full of timestamps. [True/False]
-
-normalize_audio: True
- # makes all audio tracks the same relative loudness
-
-video_bitrate: 4000000
- # defines the video bitrate for the compilation. [408p: 100000, 720p: 2000000, *1080p: 4000000, 4K: 8000000, Insane: 16000000]
-
-audio_bitrate: 256000
- # defines the audio bitrate for the compilation. Recommended settings: [128000, *256000, 384000, 512000]
- #
- # * = recommended setting
-
-ip_type: "-6"
- # used for debugging purposes. ["", "-4", "-6"]
+audio_bitrate: '256000'
+generate_timestamps: true
+ip_type: ''
+keep_order: true
+normalize_audio: true
+video_bitrate: '4000000'
