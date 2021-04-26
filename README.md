@@ -13,13 +13,15 @@ The program is pretty self-explanatory, however I thought it would be best to st
 - Run "Compilation++.exe"
 - Follow the steps on screen
 - Insert a title, a valid YouTube playlist, and an image to use
+- Edit the settings either through the UI settings menu or the config.yaml file if needed.
 - Click the "Start!" button.
 - Be patient!
 
 # Limitations
-This program is pretty limiting. Here are some of the limits put in place as of 4/16/2021:
-- You may only use one photo for the entire compilation
-- Edit the settings either through the UI settings menu or the config.yaml file
+This program is pretty limiting. Here are some of the limits put in place as of 4/26/2021:
+- You can only use one photo for the entire compilation
+- You can only use youtube playlists (mp3 folders coming soon!)
+- There may still be some bugs. Let me know at Ezonater#8586 if you discover any.
 
 # Background
-This program is made possible by youtube-dlc and ffmpeg.
+This program is made possible by youtube-dlc and ffmpeg. I do not benefit from this program whatsoever, I only created it to make compiling easier for everyone. I wish to see the community grow, so I hope this will help that happen.
