@@ -8,6 +8,7 @@ import tkinter as tk
 import datetime
 import math
 import time
+import PyQt5
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
@@ -351,12 +352,6 @@ def root_program():
     root.config(menu=menubar)
     fileMenu = tk.Menu(menubar)
 
-    def settings():
-        print("Placeholder")
-        # subprocess.call('config.yaml', shell=True)
-        # load_config()
-        # render_info()
-
     def update_config(option, state, widget):
         global options_dict
         if widget == "check":
@@ -376,7 +371,7 @@ def root_program():
             widget.destroy()
 
         # New Window
-        root.geometry("600x600")
+        root.geometry("600x400")
 
         # New objects
         main_label.pack()
