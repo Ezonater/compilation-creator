@@ -4,7 +4,7 @@ Have you ever wanted to create your own compilation for YouTube, but don't have 
 Here's your chance to make high quality compilations without paid software!
 
 # Download
-Follow this link to download the executable file: https://github.com/Ezonater/compilation-creator/releases/latest/Compilation++.zip
+Follow this link to download the executable file: https://github.com/Ezonater/compilation-creator/releases/latest
 
 # How-To
 The program is pretty self-explanatory, however I thought it would be best to still include a how-to guide
