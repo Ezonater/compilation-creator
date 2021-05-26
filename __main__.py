@@ -8,6 +8,7 @@ import tkinter as tk
 import datetime
 import math
 import time
+import re
 
 from tkinter import filedialog
 from mutagen.mp3 import MP3
@@ -292,7 +293,7 @@ def root_program():
 
         # Initialize new variables so the user may play with the variables while rendering
         this_playlist = current_playlist
-        this_title = current_title
+        this_title = re.sub('[\\\/|\[\]!:\"?<>*]', '', current_title)
         this_thumbnail = current_thumbnail
 
         if not ignore_playlist:
@@ -329,7 +330,7 @@ def root_program():
                                      "Please note that this program is still in development.\n"
                                      "There still may be tweaks to be made.")
     main_label = tk.Label(root, text="Compilation Generator", font=30, pady=20)
-    version_label = tk.Label(root, text="Version Number: v0.1.7")
+    version_label = tk.Label(root, text="Version Number: v0.1.8")
     playlist_entry_label = tk.Label(root, text="Enter your playlist here:")
     playlist_text_variable = tk.StringVar()
     playlist_text_variable.trace("w",
@@ -350,12 +351,6 @@ def root_program():
     menubar = tk.Menu(root)
     root.config(menu=menubar)
     fileMenu = tk.Menu(menubar)
-
-    def settings():
-        print("Placeholder")
-        # subprocess.call('config.yaml', shell=True)
-        # load_config()
-        # render_info()
 
     def update_config(option, state, widget):
         global options_dict
