@@ -14,3 +14,5 @@ pyinstaller.txt
 tracklist.txt
 other
 other/**
+venv
+venv/**

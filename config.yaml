@@ -1,6 +1,6 @@
 audio_bitrate: '256000'
 generate_timestamps: true
-ip_type: ''
 keep_order: true
 normalize_audio: true
 video_bitrate: '4000000'
+ambience: false

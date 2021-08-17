@@ -24,25 +24,9 @@
     <item>
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <spacer name="verticalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeType">
-         <enum>QSizePolicy::Preferred</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>0</width>
-          <height>0</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <layout class="QHBoxLayout" name="playlist_link">
         <item>
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="playlist_link_label">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -55,7 +39,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit">
+         <widget class="QLineEdit" name="playlist_link_entry">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -67,30 +51,30 @@
        </layout>
       </item>
       <item>
-       <layout class="QGridLayout" name="gridLayout_2">
+       <layout class="QGridLayout" name="options">
         <item row="1" column="2">
-         <widget class="QCheckBox" name="checkBox_2">
+         <widget class="QCheckBox" name="include_ambience">
           <property name="text">
            <string>Include Ambience</string>
           </property>
          </widget>
         </item>
         <item row="1" column="0">
-         <widget class="QCheckBox" name="checkBox_6">
+         <widget class="QCheckBox" name="playlist_order">
           <property name="text">
            <string>Preserve Playlist Order</string>
           </property>
          </widget>
         </item>
         <item row="0" column="2">
-         <widget class="QCheckBox" name="checkBox">
+         <widget class="QCheckBox" name="generate_timestamps">
           <property name="text">
            <string>Generate Timestamps</string>
           </property>
          </widget>
         </item>
         <item row="0" column="0">
-         <widget class="QCheckBox" name="checkBox_4">
+         <widget class="QCheckBox" name="normalize_audio">
           <property name="text">
            <string>Normalize Audio</string>
           </property>
@@ -99,14 +83,14 @@
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QLabel" name="label_2">
+           <widget class="QLabel" name="video_bitrate_label">
             <property name="text">
              <string>Video Bitrate</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_2">
+           <widget class="QLineEdit" name="video_bitrate_entry">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -143,14 +127,14 @@
         <item row="1" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="audio_bitrate_label">
             <property name="text">
              <string>Audio Bitrate</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_3">
+           <widget class="QLineEdit" name="audio_bitrate_entry">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
               <horstretch>0</horstretch>
@@ -187,46 +171,92 @@
        </layout>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <layout class="QVBoxLayout" name="ambience_container">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <layout class="QHBoxLayout" name="ambience_1">
           <item>
-           <widget class="QLabel" name="label_6">
+           <widget class="QLabel" name="label_8">
             <property name="text">
              <string>Ambience #1</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_5"/>
+           <widget class="QLineEdit" name="am_1_entry"/>
+          </item>
+          <item>
+           <widget class="QSlider" name="am_1_vol">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <layout class="QHBoxLayout" name="ambience_2">
           <item>
-           <widget class="QLabel" name="label_7">
+           <widget class="QLabel" name="label_6">
             <property name="text">
              <string>Ambience #2</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_4"/>
+           <widget class="QLineEdit" name="am_2_entry">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="am_2_vol">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_9">
+         <layout class="QHBoxLayout" name="ambience_3">
           <item>
-           <widget class="QLabel" name="label_8">
+           <widget class="QLabel" name="label_7">
             <property name="text">
              <string>Ambience #3</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QLineEdit" name="lineEdit_6"/>
+           <widget class="QLineEdit" name="am_3_entry"/>
+          </item>
+          <item>
+           <widget class="QSlider" name="am_3_vol">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -235,10 +265,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QGraphicsView" name="graphicsView">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
+         <widget class="QPushButton" name="thumbnail">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -251,25 +278,22 @@
             <height>180</height>
            </size>
           </property>
-          <property name="sizeIncrement">
-           <size>
-            <width>320</width>
-            <height>180</height>
-           </size>
+          <property name="text">
+           <string>PushButton</string>
           </property>
          </widget>
         </item>
        </layout>
       </item>
       <item>
-       <widget class="QProgressBar" name="progressBar">
+       <widget class="QProgressBar" name="progress">
         <property name="value">
          <number>24</number>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="start_button">
         <property name="text">
          <string>Start</string>
         </property>
@@ -298,7 +322,7 @@
      <x>0</x>
      <y>0</y>
      <width>941</width>
-     <height>21</height>
+     <height>26</height>
     </rect>
    </property>
   </widget>
