@@ -12,7 +12,7 @@ import yaml
 from PyQt5 import QtCore, QtGui, QtWidgets
 from download import *
 from config import *
-from util import *
+import util
 
 config = Config()
 print(config.options_dict)
@@ -210,7 +210,6 @@ class Ui_MainWindow(object):
         self.line_4.setObjectName("line_4")
         self.verticalLayout.addWidget(self.line_4)
         self.progress = QtWidgets.QProgressBar(self.centralwidget)
-        self.progress.setProperty("value", 24)
         self.progress.setObjectName("progress")
         self.verticalLayout.addWidget(self.progress)
         self.start_button = QtWidgets.QPushButton(self.centralwidget)
@@ -238,7 +237,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowIcon(QtGui.QIcon('icon.png'))
         MainWindow.resize(0, 0)
         self.playlist_link_label.setText(_translate("MainWindow", "Playlist Link"))
-        self.playlist_link_entry.textEdited.connect(lambda link=self.playlist_link_entry.text,: self.update_playlist_link(link))
+        self.playlist_link_entry.textEdited.connect(lambda link=self.playlist_link_entry.text : self.update_playlist_link(link))
         self.include_ambience.setText(_translate("MainWindow", "Include Ambience"))
         self.include_ambience.clicked.connect(self.open_ambience)
         self.playlist_order.setText(_translate("MainWindow", "Preserve Playlist Order"))
@@ -258,7 +257,10 @@ class Ui_MainWindow(object):
         self.am_1_vol.setValue(50)
         self.am_2_vol.setValue(50)
         self.am_3_vol.setValue(50)
-        self.start_button.clicked.connect(lambda link=self.playlist_link_entry.text,: valid_link(link))
+        self.progress.setProperty("value", None)
+        self.progress.setAlignment(QtCore.Qt.AlignCenter)
+        self.progress.setFormat("")
+        self.start_button.clicked.connect(lambda: util.valid_link(playlist))
         
     def browseFiles(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(None,'Choose a thumbnail', '/Pictures',"Image files (*.jpg *.png)")
