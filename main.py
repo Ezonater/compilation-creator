@@ -19,6 +19,7 @@ print(config.options_dict)
 
 thumbnail = None
 playlist = None
+playlist_valid = None
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -260,7 +261,7 @@ class Ui_MainWindow(object):
         self.progress.setProperty("value", None)
         self.progress.setAlignment(QtCore.Qt.AlignCenter)
         self.progress.setFormat("")
-        self.start_button.clicked.connect(lambda: util.valid_link(playlist))
+        self.start_button.clicked.connect(lambda: self.valid_link())
         
     def browseFiles(self):
         filename = QtWidgets.QFileDialog.getOpenFileName(None,'Choose a thumbnail', '/Pictures',"Image files (*.jpg *.png)")
@@ -284,6 +285,12 @@ class Ui_MainWindow(object):
         else:
             for ambience in ambience_container:
                 ambience.hide()
+    
+    def valid_link(self):
+        global playlist_valid
+        playlist_valid = util.valid_link(playlist)
+        print(playlist_valid)
+
 
 import sys
 app = QtWidgets.QApplication(sys.argv)
