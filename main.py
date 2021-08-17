@@ -16,6 +16,10 @@ from config import *
 config = Config()
 print(config.options_dict)
 
+thumbnail = None
+playlist = None
+
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -181,6 +185,7 @@ class Ui_MainWindow(object):
         self.thumbnail.setSizePolicy(sizePolicy)
         self.thumbnail.setMinimumSize(QtCore.QSize(320, 180))
         self.thumbnail.setObjectName("thumbnail")
+        self.thumbnail.setStyleSheet("background-image : url(icon.png);")
         self.horizontalLayout_5.addWidget(self.thumbnail)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.progress = QtWidgets.QProgressBar(self.centralwidget)
@@ -220,8 +225,16 @@ class Ui_MainWindow(object):
         self.label_8.setText(_translate("MainWindow", "Ambience #1"))
         self.label_6.setText(_translate("MainWindow", "Ambience #2"))
         self.label_7.setText(_translate("MainWindow", "Ambience #3"))
-        self.thumbnail.setText(_translate("MainWindow", "PushButton"))
+        self.thumbnail.setText(_translate("MainWindow", "Browse for thumbnail"))
         self.start_button.setText(_translate("MainWindow", "Start"))
+        self.thumbnail.clicked.connect(self.browseFiles)
+    
+    def browseFiles(self):
+        filename = QtWidgets.QFileDialog.getOpenFileName(None,'Choose a thumbnail', 
+   'c:\\Pictures',"Image files (*.jpg *.png)")
+        global thumbnail
+        thumbnail = filename
+        print(thumbnail)
 
 import sys
 app = QtWidgets.QApplication(sys.argv)
