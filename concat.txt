@@ -1,5 +1,0 @@
-file 'D:\itzst\Documents\Programming\Python Projects\Compilation Creator\tracklist\1-Stella Glow OST - Title Screen Music.mp3'
-file 'D:\itzst\Documents\Programming\Python Projects\Compilation Creator\tracklist\2-Cafe alt 2 - Paper mario - The Origami King OST.mp3'
-file 'D:\itzst\Documents\Programming\Python Projects\Compilation Creator\tracklist\3-Musee Champignon - Paper Mario - The Origami King OST.mp3'
-file 'D:\itzst\Documents\Programming\Python Projects\Compilation Creator\tracklist\4-Event ~ Peace - Pokkén Tournament.mp3'
-file 'D:\itzst\Documents\Programming\Python Projects\Compilation Creator\tracklist\5-Kindness-Steeping Street - Kirby Star Allies OST [242].mp3'
