@@ -51,35 +51,14 @@
        </layout>
       </item>
       <item>
+       <widget class="Line" name="line">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QGridLayout" name="options">
-        <item row="1" column="2">
-         <widget class="QCheckBox" name="include_ambience">
-          <property name="text">
-           <string>Include Ambience</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="playlist_order">
-          <property name="text">
-           <string>Preserve Playlist Order</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QCheckBox" name="generate_timestamps">
-          <property name="text">
-           <string>Generate Timestamps</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="normalize_audio">
-          <property name="text">
-           <string>Normalize Audio</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
@@ -168,7 +147,42 @@
           </item>
          </layout>
         </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="normalize_audio">
+          <property name="text">
+           <string>Normalize Audio</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="generate_timestamps">
+          <property name="text">
+           <string>Generate Timestamps</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="playlist_order">
+          <property name="text">
+           <string>Preserve Playlist Order</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QCheckBox" name="include_ambience">
+          <property name="text">
+           <string>Include Ambience</string>
+          </property>
+         </widget>
+        </item>
        </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <layout class="QVBoxLayout" name="ambience_container">
@@ -263,6 +277,13 @@
        </layout>
       </item>
       <item>
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
          <widget class="QPushButton" name="thumbnail">
@@ -284,6 +305,13 @@
          </widget>
         </item>
        </layout>
+      </item>
+      <item>
+       <widget class="Line" name="line_4">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QProgressBar" name="progress">
