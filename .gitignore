@@ -16,3 +16,7 @@ other
 other/**
 venv
 venv/**
+tracklist
+tracklist/**
+ffmpeg.exe
+youtube-dlp.exe

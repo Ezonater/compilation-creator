@@ -10,9 +10,14 @@
 import yaml
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+import download
+import ffmpeg
 from download import *
 from config import *
 import util
+import os
+import threading
 
 config = Config()
 print(config.options_dict)
@@ -20,6 +25,8 @@ print(config.options_dict)
 thumbnail = None
 playlist = None
 playlist_valid = None
+compiling = False
+
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -84,7 +91,6 @@ class Ui_MainWindow(object):
         self.video_bitrate_label.setObjectName("video_bitrate_label")
         self.horizontalLayout_3.addWidget(self.video_bitrate_label)
         self.video_bitrate_entry = QtWidgets.QLineEdit(self.centralwidget)
-        self.video_bitrate_entry.setText(config.options_dict['video_bitrate'])
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -104,7 +110,6 @@ class Ui_MainWindow(object):
         self.audio_bitrate_label.setObjectName("audio_bitrate_label")
         self.horizontalLayout_4.addWidget(self.audio_bitrate_label)
         self.audio_bitrate_entry = QtWidgets.QLineEdit(self.centralwidget)
-        self.audio_bitrate_entry.setText(config.options_dict['audio_bitrate'])
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -238,15 +243,28 @@ class Ui_MainWindow(object):
         MainWindow.setWindowIcon(QtGui.QIcon('icon.png'))
         MainWindow.resize(0, 0)
         self.playlist_link_label.setText(_translate("MainWindow", "Playlist Link"))
-        self.playlist_link_entry.textEdited.connect(lambda link=self.playlist_link_entry.text : self.update_playlist_link(link))
+        self.playlist_link_entry.textEdited.connect(
+            lambda link=self.playlist_link_entry.text: self.update_playlist_link(link))
         self.include_ambience.setText(_translate("MainWindow", "Include Ambience"))
         self.include_ambience.clicked.connect(self.open_ambience)
         self.playlist_order.setText(_translate("MainWindow", "Preserve Playlist Order"))
+        self.playlist_order.setChecked(config.options_dict['keep_order'])
+        self.playlist_order.clicked.connect(lambda: config.edit_config('keep_order', self.playlist_order.isChecked()))
         self.generate_timestamps.setText(_translate("MainWindow", "Generate Timestamps"))
+        self.generate_timestamps.clicked.connect(
+            lambda: config.edit_config('generate_timestamps', self.generate_timestamps.isChecked()))
         self.normalize_audio.setText(_translate("MainWindow", "Normalize Audio"))
+        self.normalize_audio.clicked.connect(
+            lambda: config.edit_config('normalize_audio', self.normalize_audio.isChecked()))
         self.video_bitrate_label.setText(_translate("MainWindow", "Video Bitrate"))
+        self.video_bitrate_entry.setText(str(config.options_dict['video_bitrate']))
+        self.video_bitrate_entry.textEdited.connect(
+            lambda: config.edit_config('video_bitrate', self.video_bitrate_entry.text()))
+        self.video_bitrate_entry.setValidator(QtGui.QIntValidator())
         self.label_4.setText(_translate("MainWindow", "kBps"))
         self.audio_bitrate_label.setText(_translate("MainWindow", "Audio Bitrate"))
+        self.audio_bitrate_entry.setText(str(config.options_dict['audio_bitrate']))
+        self.audio_bitrate_entry.setValidator(QtGui.QIntValidator())
         self.label_5.setText(_translate("MainWindow", "kBps"))
         self.label_8.setText(_translate("MainWindow", "Ambience #1"))
         self.label_6.setText(_translate("MainWindow", "Ambience #2"))
@@ -260,39 +278,74 @@ class Ui_MainWindow(object):
         self.am_3_vol.setValue(50)
         self.progress.setProperty("value", None)
         self.progress.setAlignment(QtCore.Qt.AlignCenter)
+        print(self.progress.format())
         self.progress.setFormat("")
-        self.start_button.clicked.connect(lambda: self.valid_link())
-        
+        self.start_button.clicked.connect(lambda: threading.Thread(target=self.start_compiling).start())
+        self.start_button.setEnabled(False)
+
     def browseFiles(self):
-        filename = QtWidgets.QFileDialog.getOpenFileName(None,'Choose a thumbnail', '/Pictures',"Image files (*.jpg *.png)")
+        filename = QtWidgets.QFileDialog.getOpenFileName(None, 'Choose a thumbnail',
+                                                         config.options_dict['last_thumb_dir'],
+                                                         "Image files (*.jpg *.png)")
         global thumbnail
-        thumbnail = filename
-        self.thumbnail.setStyleSheet("border-image : url("+thumbnail[0]+");")
-        if thumbnail[0] != "": self.thumbnail.setText("")
-        else: self.thumbnail.setText("Browse for a thumbnail")
-        print(thumbnail[0])
+        thumbnail = filename[0]
+        self.thumbnail.setStyleSheet("border-image : url(" + thumbnail + ");")
+        if thumbnail != "":
+            self.thumbnail.setText("")
+            config.edit_config('last_thumb_dir', os.path.dirname(thumbnail))
+        else:
+            self.thumbnail.setText("Browse for a thumbnail")
+        self.validate_start()
+        print(thumbnail)
 
     def update_playlist_link(self, link):
         global playlist
         playlist = link
         print(playlist)
+        self.valid_link()
 
     def open_ambience(self):
-        ambience_container = [self.am_1_entry, self.am_1_vol, self.am_2_vol, self.am_2_entry, self.am_3_entry, self.am_3_vol, self.label_6, self.label_7, self.label_8, self.line_3]
+        ambience_container = [self.am_1_entry, self.am_1_vol, self.am_2_vol, self.am_2_entry, self.am_3_entry,
+                              self.am_3_vol, self.label_6, self.label_7, self.label_8, self.line_3]
         if self.include_ambience.isChecked():
             for ambience in ambience_container:
                 ambience.show()
         else:
             for ambience in ambience_container:
                 ambience.hide()
-    
+        config.edit_config('ambience', self.include_ambience.isChecked())
+
     def valid_link(self):
         global playlist_valid
         playlist_valid = util.valid_link(playlist)
         print(playlist_valid)
+        self.validate_start()
+
+    def validate_start(self):
+        print(thumbnail)
+        if playlist_valid and thumbnail != "" and thumbnail is not None and not compiling:
+            self.start_button.setEnabled(True)
+        else:
+            self.start_button.setEnabled(False)
+
+    def start_compiling(self):
+        global compiling
+        compiling = True
+        attr = {'playlist':playlist,'thumbnail':thumbnail,'config':config}
+        self.start_button.setEnabled(False)
+        self.progress.setFormat("%p%")
+        util.clean_up()
+        download.playlist_download(self, attr['playlist'], int(attr['config'].options_dict['audio_bitrate'])*1000, '',)
+        tracklist_length = util.generate_tracklist(attr['config'])
+        print(tracklist_length)
+        ffmpeg.compile(self, attr['thumbnail'], int(attr['config'].options_dict['audio_bitrate'])*1000, int(attr['config'].options_dict['video_bitrate'])*1000, attr['config'].options_dict['normalize_audio'], tracklist_length)
+        util.clean_up()
+        self.start_button.setEnabled(False)
+        print("compiling started!")
 
 
 import sys
+
 app = QtWidgets.QApplication(sys.argv)
 MainWindow = QtWidgets.QMainWindow()
 ui = Ui_MainWindow()

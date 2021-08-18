@@ -1,5 +1,43 @@
 import re
+import os
+import datetime
+import math
+from mutagen.mp3 import MP3
 def valid_link(link):
     if re.search('(?:https?:\\/\\/)?(?:www\\.)?youtu\\.?be(?:\\.com)?\\/?.*(?:watch|embed)?(?:.*v=|v\\/|\\/)([\\w\\-_]+)\\&?', link):
         return True
     else: return False
+
+def generate_tracklist(config):
+    elapsed_time = 0
+    f = open('tracklist.txt', 'w')
+    f.close()
+    for track in os.listdir(os.getcwd() + '\\tracklist'):
+        if track.endswith('.mp3'):
+            timestamp = str(datetime.timedelta(seconds=math.floor(elapsed_time)))
+            elapsed_time += MP3(os.getcwd() + '\\tracklist\\' + track).info.length
+            print(timestamp)
+            if config.options_dict['generate_timestamps']:
+                f = open("tracklist.txt", "a", encoding='utf-8')
+                trackname = os.path.splitext(os.path.basename(track))[0]
+                if config.options_dict['keep_order']:
+                    trackname = trackname[trackname.index('-') + 1:]
+                f.write(timestamp + ' - ' + trackname + '\n')
+                f.close()
+    return elapsed_time
+
+def clean_up():
+    # Clean up, clean up. Everybody do your share.
+
+    for filename in os.listdir(os.path.join(os.getcwd(),"tracklist")):
+        if filename.endswith('.mp3'):
+            os.remove(os.path.join(os.path.join(os.getcwd(),"tracklist"),filename))
+
+    if os.path.isfile("concat.txt"):
+        os.remove("concat.txt")
+
+    if os.path.isfile("big_audio.mp3"):
+        os.remove("big_audio.mp3")
+
+    if os.path.isfile("normalized_audio.mp3"):
+        os.remove("normalized_audio.mp3")
