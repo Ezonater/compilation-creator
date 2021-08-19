@@ -121,5 +121,3 @@ def generate_mp4(window, thumbnail, audio_bitrate, video_bitrate, total_length):
             print(seconds_time)
             window.progress_update.emit(['increment', seconds_time])
             # window.progress.setValue(seconds_time)
-    window.progress_update.emit(['increment', 100])
-    # window.progress.setValue(100)

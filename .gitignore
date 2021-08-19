@@ -18,6 +18,8 @@ venv
 venv/**
 tracklist
 tracklist/**
+ambience
+ambience/**
 ffmpeg.exe
 youtube-dlp.exe
 big_audio.mp3

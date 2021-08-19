@@ -108,6 +108,8 @@ def ambience_download(window, amb, audio_bitrate):
                 ydl.download([ambience['link']])
 
             p = subprocess.Popen(
-                ['ffmpeg', '-i', str(amb_path), '-filter:a', 'volume=.'+str(ambience['vol']),
+                ['ffmpeg', '-i', str(amb_path), '-filter:a', 'volume='+str(ambience['vol']/100),
                  str(amb_path)+"_vol"], stdin=PIPE, stderr=subprocess.STDOUT, stdout=PIPE,
                 creationflags=CREATE_NO_WINDOW, universal_newlines=True)
+            for line in p.stdout:
+                print(line)

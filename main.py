@@ -365,7 +365,7 @@ class Ui_MainWindow(object):
         print(tracklist_length)
         ffmpeg.compile(self, attr['thumbnail'], int(attr['config'].options_dict['audio_bitrate'])*1000, int(attr['config'].options_dict['video_bitrate'])*1000, attr['config'].options_dict['normalize_audio'], attr['config'].options_dict['ambience'], tracklist_length)
         self.progress.setFormat("")
-        self.progress.setProperty("value", None)
+        self.progress.setProperty("value", 0)
         util.clean_up()
         compiling = False
         self.start_button.setEnabled(True)
@@ -400,7 +400,7 @@ class DownloadThread(QtCore.QThread):
         ffmpeg.compile(self, self.attr['thumbnail'], int(self.attr['config'].options_dict['audio_bitrate'])*1000, int(self.attr['config'].options_dict['video_bitrate'])*1000, self.attr['config'].options_dict['normalize_audio'], self.attr['config'].options_dict['ambience'], tracklist_length)
         self.progress_update.emit(['format', ""])
         # self.progress.setFormat("")
-        self.progress_update.emit(['increment', None])
+        self.progress_update.emit(['increment', 0])
         # self.progress.setProperty("value", None)
         util.clean_up()
         compiling = False
