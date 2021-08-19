@@ -2,8 +2,7 @@ from __future__ import unicode_literals
 import subprocess
 from subprocess import PIPE, CREATE_NO_WINDOW
 import os
-import youtube_dlc
-
+import yt_dlp
 import util
 
 
@@ -26,7 +25,6 @@ def playlist_download(window, link, audio_bitrate):
                 self.download_progress = float(
                     msg[:msg.index('%')].split(" ")[len(msg[:msg.index('%')].split(" ")) - 1])
             window.progress_update.emit(['increment', self.download_progress + (self.current_download - 1) * 100])
-            # window.progress.setValue(self.download_progress + (self.current_download - 1) * 100)
 
         def warning(self, msg):
             print('warn: ' + msg)
@@ -51,20 +49,17 @@ def playlist_download(window, link, audio_bitrate):
         'logger': MyLogger(),
         'progress_hooks': [my_hook],
     }
-    with youtube_dlc.YoutubeDL(ydl_opts) as ydl:
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([link])
 
 
 def ambience_download(window, amb, audio_bitrate):
     window.progress_update.emit(['increment', 0])
-    # window.progress.setValue(0)
     amb_path=None
     for ambience in amb:
         if util.valid_link(ambience['link']):
             window.progress_update.emit(['format', "Downloading ambience: %p%"])
-            # window.progress.setFormat("Downloading ambience: %p%")
             window.progress_update.emit(['maximum', 100])
-            # window.progress.setMaximum(100)
             print(ambience['link'], ambience['vol'])
 
             class MyLogger(object):
@@ -77,8 +72,8 @@ def ambience_download(window, amb, audio_bitrate):
                         self.download_progress = float(
                             msg[:msg.index('%')].split(" ")[len(msg[:msg.index('%')].split(" ")) - 1])
                         window.progress_update.emit(['increment', self.download_progress])
-                        # window.progress.setValue(self.download_progress)
                     if '[ffmpeg]' in msg and "ambience" in msg:
+                        global amb_path
                         amb_path = msg[msg.index('ambience'):]
 
                 def warning(self, msg):
@@ -104,7 +99,7 @@ def ambience_download(window, amb, audio_bitrate):
                 'logger': MyLogger(),
                 'progress_hooks': [my_hook],
             }
-            with youtube_dlc.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([ambience['link']])
 
             p = subprocess.Popen(

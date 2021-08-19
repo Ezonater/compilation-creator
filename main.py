@@ -349,32 +349,6 @@ class Ui_MainWindow(object):
     def start_button_update(self, data):
         self.start_button.setEnabled(data)
 
-    def start_compiling(self):
-        global compiling
-        compiling = True
-        print("compiling started!")
-        attr = {'playlist':playlist,'thumbnail':thumbnail,'config':config}
-        amb = [{'link': self.am_1_entry.text(), 'vol':self.am_1_vol.value()},{'link': self.am_2_entry.text(), 'vol': self.am_2_vol.value()},{'link': self.am_3_entry.text(), 'vol': self.am_3_vol.value()}]
-        self.start_button.setEnabled(False)
-        self.progress.setFormat("%p%")
-        util.clean_up()
-        download.playlist_download(self, attr['playlist'], attr['config'].options_dict['audio_bitrate'])
-        if attr['config'].options_dict['ambience']:
-            download.ambience_download(self, amb, attr['config'].options_dict['audio_bitrate'])
-        tracklist_length = util.generate_tracklist(attr['config'])
-        print(tracklist_length)
-        ffmpeg.compile(self, attr['thumbnail'], int(attr['config'].options_dict['audio_bitrate'])*1000, int(attr['config'].options_dict['video_bitrate'])*1000, attr['config'].options_dict['normalize_audio'], attr['config'].options_dict['ambience'], tracklist_length)
-        self.progress.setFormat("")
-        self.progress.setProperty("value", 0)
-        util.clean_up()
-        compiling = False
-        self.start_button.setEnabled(True)
-        print("compiling finished!")
-
-    def make_thread(self):
-        t = threading.Thread(target=self.start_compiling)
-        t.start()
-
 class DownloadThread(QtCore.QThread):
 
     progress_update = QtCore.pyqtSignal(object)
@@ -390,7 +364,6 @@ class DownloadThread(QtCore.QThread):
         compiling = True
         print("compiling started!")
         self.start_button.emit(False)
-        # self.start_button.setEnabled(False)
         util.clean_up()
         download.playlist_download(self, self.attr['playlist'], self.attr['config'].options_dict['audio_bitrate'])
         if self.attr['config'].options_dict['ambience']:
@@ -399,13 +372,10 @@ class DownloadThread(QtCore.QThread):
         print(tracklist_length)
         ffmpeg.compile(self, self.attr['thumbnail'], int(self.attr['config'].options_dict['audio_bitrate'])*1000, int(self.attr['config'].options_dict['video_bitrate'])*1000, self.attr['config'].options_dict['normalize_audio'], self.attr['config'].options_dict['ambience'], tracklist_length)
         self.progress_update.emit(['format', ""])
-        # self.progress.setFormat("")
         self.progress_update.emit(['increment', 0])
-        # self.progress.setProperty("value", None)
         util.clean_up()
         compiling = False
         self.start_button.emit(True)
-        # self.start_button.setEnabled(True)
         print("compiling finished!")
 
 app = QtWidgets.QApplication(sys.argv)

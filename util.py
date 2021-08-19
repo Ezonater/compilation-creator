@@ -29,9 +29,13 @@ def generate_tracklist(config):
 def clean_up():
     # Clean up, clean up. Everybody do your share.
 
+    if not os.path.isdir(os.path.join(os.getcwd(),"tracklist")):
+        os.mkdir(os.path.join(os.getcwd(),"tracklist"))
     for filename in os.listdir(os.path.join(os.getcwd(),"tracklist")):
         os.remove(os.path.join(os.path.join(os.getcwd(),"tracklist"),filename))
 
+    if not os.path.isdir(os.path.join(os.getcwd(),"ambience")):
+            os.mkdir(os.path.join(os.getcwd(),"ambience"))
     for filename in os.listdir(os.path.join(os.getcwd(),"ambience")):
         os.remove(os.path.join(os.path.join(os.getcwd(),"ambience"),filename))
 
