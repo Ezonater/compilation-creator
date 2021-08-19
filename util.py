@@ -8,6 +8,9 @@ def valid_link(link):
         return True
     else: return False
 
+def valid_filename(string):
+    return "".join(i for i in string if i not in "\/:*?<>|")
+
 def generate_tracklist(config):
     elapsed_time = 0
     f = open('tracklist.txt', 'w')

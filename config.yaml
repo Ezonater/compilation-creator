@@ -4,4 +4,4 @@ generate_timestamps: true
 keep_order: true
 last_thumb_dir: C:/Users/itzst/Pictures
 normalize_audio: true
-video_bitrate: '4000'
+video_bitrate: 4000

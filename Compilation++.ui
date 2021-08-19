@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>941</width>
-    <height>761</height>
+    <width>663</width>
+    <height>595</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -103,7 +103,21 @@
           </item>
          </layout>
         </item>
-        <item row="1" column="1">
+        <item row="0" column="2">
+         <widget class="QCheckBox" name="generate_timestamps">
+          <property name="text">
+           <string>Generate Timestamps</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCheckBox" name="normalize_audio">
+          <property name="text">
+           <string>Normalize Audio</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
            <widget class="QLabel" name="audio_bitrate_label">
@@ -147,31 +161,58 @@
           </item>
          </layout>
         </item>
-        <item row="0" column="0">
-         <widget class="QCheckBox" name="normalize_audio">
-          <property name="text">
-           <string>Normalize Audio</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2">
-         <widget class="QCheckBox" name="generate_timestamps">
-          <property name="text">
-           <string>Generate Timestamps</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
+        <item row="2" column="0">
          <widget class="QCheckBox" name="playlist_order">
           <property name="text">
            <string>Preserve Playlist Order</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="3" column="1">
+         <widget class="QPushButton" name="set_output">
+          <property name="text">
+           <string>Output Location...</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <layout class="QHBoxLayout" name="title_container">
+          <item>
+           <widget class="QLabel" name="title_label">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Title</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="lineEdit">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="3" column="2">
          <widget class="QCheckBox" name="include_ambience">
           <property name="text">
            <string>Include Ambience</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QCheckBox" name="stretch_image">
+          <property name="text">
+           <string>Stretch Image</string>
           </property>
          </widget>
         </item>
@@ -349,7 +390,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>941</width>
+     <width>663</width>
      <height>26</height>
     </rect>
    </property>

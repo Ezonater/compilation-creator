@@ -3,14 +3,14 @@ import subprocess
 from subprocess import CREATE_NO_WINDOW, PIPE
 
 
-def compile(window, thumbnail, audio_bitrate, video_bitrate, normalize, ambience, total_length):
+def compile(window, title, thumbnail, audio_bitrate, video_bitrate, normalize, ambience, total_length):
     print(thumbnail, audio_bitrate, video_bitrate, normalize, total_length)
     concat(window, total_length)
     if normalize:
         normalize_audio(window, audio_bitrate, total_length)
     if ambience:
         add_ambience(window, total_length)
-    generate_mp4(window, thumbnail, audio_bitrate, video_bitrate, total_length)
+    generate_mp4(window, title, thumbnail, audio_bitrate, video_bitrate, total_length)
 
 
 def concat(window, total_length):
@@ -98,7 +98,7 @@ def add_ambience(window, total_length):
         os.remove('big_audio.mp3')
         os.rename('ambience_audio.mp3', 'big_audio.mp3')
 
-def generate_mp4(window, thumbnail, audio_bitrate, video_bitrate, total_length):
+def generate_mp4(window, title, thumbnail, audio_bitrate, video_bitrate, total_length):
     window.progress_update.emit(['format', "Generating output: %p%"])
     # window.progress.setFormat("Generating output: %p%")
     window.progress_update.emit(['maximum', total_length])
@@ -109,7 +109,7 @@ def generate_mp4(window, thumbnail, audio_bitrate, video_bitrate, total_length):
         ['ffmpeg', '-y', '-loop', '1', '-framerate', '5', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264',
          '-tune', 'stillimage', '-c:a', 'aac', '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',
          'yuv420p', '-vf', 'crop=trunc(iw/2)*2:trunc(ih/2)*2', '-movflags', '+faststart', '-shortest', '-fflags',
-         '+shortest', '-max_interleave_delta', '100M', 'finished.mp4'], stdout=PIPE, stderr=subprocess.STDOUT, creationflags=CREATE_NO_WINDOW, universal_newlines=True)
+         '+shortest', '-max_interleave_delta', '100M', title + '.mp4'], stdout=PIPE, stderr=subprocess.STDOUT, creationflags=CREATE_NO_WINDOW, universal_newlines=True)
     for line in p.stdout:
         print(line)
         string_line = str(line)

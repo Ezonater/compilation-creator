@@ -25,6 +25,7 @@ print(config.options_dict)
 
 thumbnail = None
 playlist = None
+title = ""
 playlist_valid = None
 compiling = False
 
@@ -73,11 +74,33 @@ class Ui_MainWindow(object):
         self.include_ambience = QtWidgets.QCheckBox(self.centralwidget)
         self.include_ambience.setObjectName("include_ambience")
         self.include_ambience.setChecked(config.options_dict['ambience'])
-        self.options.addWidget(self.include_ambience, 1, 2, 1, 1)
+        self.options.addWidget(self.include_ambience, 3, 2, 1, 1)
         self.playlist_order = QtWidgets.QCheckBox(self.centralwidget)
         self.playlist_order.setObjectName("playlist_order")
         self.playlist_order.setChecked(config.options_dict['keep_order'])
         self.options.addWidget(self.playlist_order, 1, 0, 1, 1)
+        self.set_output = QtWidgets.QPushButton(self.centralwidget)
+        self.set_output.setObjectName("set_output")
+        self.options.addWidget(self.set_output, 3, 1, 1, 1)
+        self.title_container = QtWidgets.QHBoxLayout()
+        self.title_container.setObjectName("title_container")
+        self.title_label = QtWidgets.QLabel(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.title_label.sizePolicy().hasHeightForWidth())
+        self.title_label.setSizePolicy(sizePolicy)
+        self.title_label.setObjectName("title_label")
+        self.title_container.addWidget(self.title_label)
+        self.title_entry = QtWidgets.QLineEdit(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.title_entry.sizePolicy().hasHeightForWidth())
+        self.title_entry.setSizePolicy(sizePolicy)
+        self.title_entry.setObjectName("title_entry")
+        self.title_container.addWidget(self.title_entry)
+        self.options.addLayout(self.title_container, 3, 0, 1, 1)
         self.generate_timestamps = QtWidgets.QCheckBox(self.centralwidget)
         self.generate_timestamps.setObjectName("generate_timestamps")
         self.generate_timestamps.setChecked(config.options_dict['generate_timestamps'])
@@ -124,6 +147,9 @@ class Ui_MainWindow(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(spacerItem1)
         self.options.addLayout(self.horizontalLayout_4, 1, 1, 1, 1)
+        self.stretch_image = QtWidgets.QCheckBox(self.centralwidget)
+        self.stretch_image.setObjectName("stretch_image")
+        self.options.addWidget(self.stretch_image, 1, 2, 1, 1)
         self.verticalLayout.addLayout(self.options)
         self.line_2 = QtWidgets.QFrame(self.centralwidget)
         self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
@@ -246,6 +272,8 @@ class Ui_MainWindow(object):
         self.playlist_link_label.setText(_translate("MainWindow", "Playlist Link"))
         self.playlist_link_entry.textEdited.connect(
             lambda link=self.playlist_link_entry.text: self.update_playlist_link(link))
+        self.title_entry.textEdited.connect(
+            lambda text=self.title_entry.text: self.update_title(text))
         self.include_ambience.setText(_translate("MainWindow", "Include Ambience"))
         self.include_ambience.clicked.connect(self.open_ambience)
         self.playlist_order.setText(_translate("MainWindow", "Preserve Playlist Order"))
@@ -274,6 +302,9 @@ class Ui_MainWindow(object):
         self.thumbnail.clicked.connect(self.browseFiles)
         self.thumbnail.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.start_button.setText(_translate("MainWindow", "Start"))
+        self.set_output.setText(_translate("MainWindow", "Output Location..."))
+        self.title_label.setText(_translate("MainWindow", "Title"))
+        self.stretch_image.setText(_translate("MainWindow", "Stretch Image"))
         self.am_1_vol.setValue(50)
         self.am_2_vol.setValue(50)
         self.am_3_vol.setValue(50)
@@ -298,11 +329,18 @@ class Ui_MainWindow(object):
         self.validate_start()
         print(thumbnail)
 
+        print('playlist[playlist.index("=")+1:]')
+
     def update_playlist_link(self, link):
         global playlist
         playlist = link
         print(playlist)
         self.valid_link()
+
+    def update_title(self, text):
+        global title
+        print(util.valid_filename(text))
+        title = util.valid_filename(text)
 
     def open_ambience(self):
         ambience_container = [self.am_1_entry, self.am_1_vol, self.am_2_vol, self.am_2_entry, self.am_3_entry,
@@ -330,7 +368,7 @@ class Ui_MainWindow(object):
 
     def start_download(self):
         self.threads = []
-        attr = {'playlist':playlist,'thumbnail':thumbnail,'config':config}
+        attr = {'playlist':playlist,'thumbnail':thumbnail,'config':config, 'title':title}
         amb = [{'link': self.am_1_entry.text(), 'vol':self.am_1_vol.value()},{'link': self.am_2_entry.text(), 'vol': self.am_2_vol.value()},{'link': self.am_3_entry.text(), 'vol': self.am_3_vol.value()}]
         downloader = DownloadThread(attr, amb)
         downloader.progress_update.connect(self.progress_update)
@@ -370,7 +408,10 @@ class DownloadThread(QtCore.QThread):
             download.ambience_download(self, self.amb, self.attr['config'].options_dict['audio_bitrate'])
         tracklist_length = util.generate_tracklist(self.attr['config'])
         print(tracklist_length)
-        ffmpeg.compile(self, self.attr['thumbnail'], int(self.attr['config'].options_dict['audio_bitrate'])*1000, int(self.attr['config'].options_dict['video_bitrate'])*1000, self.attr['config'].options_dict['normalize_audio'], self.attr['config'].options_dict['ambience'], tracklist_length)
+        title = self.attr['title']
+        if title == "":
+            title = self.attr['playlist'][self.attr['playlist'].index("=")+1:]
+        ffmpeg.compile(self, title, self.attr['thumbnail'], int(self.attr['config'].options_dict['audio_bitrate'])*1000, int(self.attr['config'].options_dict['video_bitrate'])*1000, self.attr['config'].options_dict['normalize_audio'], self.attr['config'].options_dict['ambience'], tracklist_length)
         self.progress_update.emit(['format', ""])
         self.progress_update.emit(['increment', 0])
         util.clean_up()
