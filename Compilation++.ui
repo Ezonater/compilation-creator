@@ -170,6 +170,12 @@
         </item>
         <item row="3" column="1">
          <widget class="QPushButton" name="set_output">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="text">
            <string>Output Location...</string>
           </property>

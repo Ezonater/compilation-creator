@@ -26,6 +26,7 @@ print(config.options_dict)
 thumbnail = None
 playlist = None
 title = ""
+output_dir = ""
 playlist_valid = None
 compiling = False
 
@@ -301,6 +302,7 @@ class Ui_MainWindow(object):
         self.thumbnail.setText(_translate("MainWindow", "Browse for thumbnail"))
         self.thumbnail.clicked.connect(self.browseFiles)
         self.thumbnail.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.set_output.clicked.connect(self.browseDirs)
         self.start_button.setText(_translate("MainWindow", "Start"))
         self.set_output.setText(_translate("MainWindow", "Output Location..."))
         self.title_label.setText(_translate("MainWindow", "Title"))
@@ -329,7 +331,11 @@ class Ui_MainWindow(object):
         self.validate_start()
         print(thumbnail)
 
-        print('playlist[playlist.index("=")+1:]')
+    def browseDirs(self):
+        filedir = QtWidgets.QFileDialog.getExistingDirectory(None, 'Output location')
+        global output_dir
+        output_dir = filedir
+        print(output_dir)
 
     def update_playlist_link(self, link):
         global playlist
