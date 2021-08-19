@@ -20,3 +20,6 @@ tracklist
 tracklist/**
 ffmpeg.exe
 youtube-dlp.exe
+big_audio.mp3
+normalized_audio.mp3
+concat.txt

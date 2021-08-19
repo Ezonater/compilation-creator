@@ -278,9 +278,8 @@ class Ui_MainWindow(object):
         self.am_3_vol.setValue(50)
         self.progress.setProperty("value", None)
         self.progress.setAlignment(QtCore.Qt.AlignCenter)
-        print(self.progress.format())
         self.progress.setFormat("")
-        self.start_button.clicked.connect(lambda: threading.Thread(target=self.start_compiling).start())
+        self.start_button.clicked.connect(lambda: self.make_thread())
         self.start_button.setEnabled(False)
 
     def browseFiles(self):
@@ -331,24 +330,39 @@ class Ui_MainWindow(object):
     def start_compiling(self):
         global compiling
         compiling = True
+        print("compiling started!")
         attr = {'playlist':playlist,'thumbnail':thumbnail,'config':config}
+        amb = [{'link': self.am_1_entry.text(), 'vol':self.am_1_vol.value()},{'link': self.am_2_entry.text(), 'vol': self.am_2_vol.value()},{'link': self.am_3_entry.text(), 'vol': self.am_3_vol.value()}]
         self.start_button.setEnabled(False)
         self.progress.setFormat("%p%")
         util.clean_up()
-        download.playlist_download(self, attr['playlist'], int(attr['config'].options_dict['audio_bitrate'])*1000, '',)
+        download.playlist_download(self, attr['playlist'], attr['config'].options_dict['audio_bitrate'])
+        if attr['config'].options_dict['ambience']:
+            download.ambience_download(self, amb, attr['config'].options_dict['audio_bitrate'])
         tracklist_length = util.generate_tracklist(attr['config'])
         print(tracklist_length)
         ffmpeg.compile(self, attr['thumbnail'], int(attr['config'].options_dict['audio_bitrate'])*1000, int(attr['config'].options_dict['video_bitrate'])*1000, attr['config'].options_dict['normalize_audio'], tracklist_length)
+        self.progress.setFormat("")
+        self.progress.setProperty("value", None)
         util.clean_up()
-        self.start_button.setEnabled(False)
-        print("compiling started!")
+        compiling = False
+        self.start_button.setEnabled(True)
+        print("compiling finished!")
+
+    def make_thread(self):
+        t = threading.Thread(target=self.start_compiling)
+        t.start()
 
 
 import sys
 
-app = QtWidgets.QApplication(sys.argv)
-MainWindow = QtWidgets.QMainWindow()
-ui = Ui_MainWindow()
-ui.setupUi(MainWindow)
-MainWindow.show()
-sys.exit(app.exec_())
+
+def main():
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
+threading.Thread(target=main).start()
+
