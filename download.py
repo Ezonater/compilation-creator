@@ -8,7 +8,7 @@ import util
 
 
 def playlist_download(window, link, audio_bitrate):
-    window.progress.setFormat("Downloading playlist: %p%")
+    window.progress_update.emit(['format', "Downloading playlist: %p%"])
 
     class MyLogger(object):
         def __init__(self):
@@ -16,16 +16,17 @@ def playlist_download(window, link, audio_bitrate):
             self.current_download = 0
 
         def debug(self, msg):
-            print("\n" + msg)
+            print(msg)
             if msg.startswith('[download] Downloading video'):
                 self.current_download = int(msg[msg.index('video') + 6:].split(" of ")[0])
                 self.download_progress = 0
                 tracklist_size = int(msg[msg.index('video') + 6:].split(" of ")[1])
-                window.progress.setMaximum(tracklist_size * 100)
+                window.progress_update.emit(['maximum',tracklist_size * 100])
             if '[download]' in msg and "%" in msg:
                 self.download_progress = float(
                     msg[:msg.index('%')].split(" ")[len(msg[:msg.index('%')].split(" ")) - 1])
-            window.progress.setValue(self.download_progress + (self.current_download - 1) * 100)
+            window.progress_update.emit(['increment', self.download_progress + (self.current_download - 1) * 100])
+            # window.progress.setValue(self.download_progress + (self.current_download - 1) * 100)
 
         def warning(self, msg):
             print('warn: ' + msg)
@@ -55,26 +56,30 @@ def playlist_download(window, link, audio_bitrate):
 
 
 def ambience_download(window, amb, audio_bitrate):
-    window.progress.setValue(0)
+    window.progress_update.emit(['increment', 0])
+    # window.progress.setValue(0)
+    amb_path=None
     for ambience in amb:
         if util.valid_link(ambience['link']):
-            window.progress.setFormat("Downloading ambience: %p%")
-            window.progress.setMaximum(100)
-            file_path=None
+            window.progress_update.emit(['format', "Downloading ambience: %p%"])
+            # window.progress.setFormat("Downloading ambience: %p%")
+            window.progress_update.emit(['maximum', 100])
+            # window.progress.setMaximum(100)
+            print(ambience['link'], ambience['vol'])
 
             class MyLogger(object):
                 def __init__(self):
                     self.download_progress = 0
 
                 def debug(self, msg):
-                    print("\n" + msg)
+                    print(msg)
                     if '[download]' in msg and "%" in msg:
                         self.download_progress = float(
                             msg[:msg.index('%')].split(" ")[len(msg[:msg.index('%')].split(" ")) - 1])
-                    window.progress.setValue(self.download_progress + (self.current_download - 1) * 100)
+                        window.progress_update.emit(['increment', self.download_progress])
+                        # window.progress.setValue(self.download_progress)
                     if '[ffmpeg]' in msg and "ambience" in msg:
-                        global file_path
-                        file_path = msg[msg.index('ambience'):]
+                        amb_path = msg[msg.index('ambience'):]
 
                 def warning(self, msg):
                     print('warn: ' + msg)
@@ -103,6 +108,6 @@ def ambience_download(window, amb, audio_bitrate):
                 ydl.download([ambience['link']])
 
             p = subprocess.Popen(
-                ['ffmpeg', '-i', 'big_audio.mp3', '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm',
-                 'normalized_audio.mp3'], stdin=PIPE, stderr=subprocess.STDOUT, stdout=PIPE,
+                ['ffmpeg', '-i', str(amb_path), '-filter:a', 'volume=.'+str(ambience['vol']),
+                 str(amb_path)+"_vol"], stdin=PIPE, stderr=subprocess.STDOUT, stdout=PIPE,
                 creationflags=CREATE_NO_WINDOW, universal_newlines=True)

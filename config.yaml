@@ -1,4 +1,4 @@
-ambience: true
+ambience: false
 audio_bitrate: 256
 generate_timestamps: true
 keep_order: true

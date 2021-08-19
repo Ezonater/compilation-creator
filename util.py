@@ -30,8 +30,10 @@ def clean_up():
     # Clean up, clean up. Everybody do your share.
 
     for filename in os.listdir(os.path.join(os.getcwd(),"tracklist")):
-        if filename.endswith('.mp3'):
-            os.remove(os.path.join(os.path.join(os.getcwd(),"tracklist"),filename))
+        os.remove(os.path.join(os.path.join(os.getcwd(),"tracklist"),filename))
+
+    for filename in os.listdir(os.path.join(os.getcwd(),"ambience")):
+        os.remove(os.path.join(os.path.join(os.getcwd(),"ambience"),filename))
 
     if os.path.isfile("concat.txt"):
         os.remove("concat.txt")
