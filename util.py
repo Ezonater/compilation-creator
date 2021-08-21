@@ -3,6 +3,7 @@ import os
 import datetime
 import math
 from mutagen.mp3 import MP3
+from PIL import Image
 def valid_link(link):
     if re.search('(?:https?:\\/\\/)?(?:www\\.)?youtu\\.?be(?:\\.com)?\\/?.*(?:watch|embed)?(?:.*v=|v\\/|\\/)([\\w\\-_]+)\\&?', link):
         return True
@@ -50,3 +51,21 @@ def clean_up():
 
     if os.path.isfile("normalized_audio.mp3"):
         os.remove("normalized_audio.mp3")
+
+def stretch_image(path):
+    with Image.open(path) as im:
+        print(im.width)
+        print(im.height)
+        size = (1280,720)
+        if im.width > im.height:
+            width = 80 * round(im.width/80)
+            size = (width, int(45*(width/80)))
+        elif im.height > im.width:
+            height = 45 * round(im.width/45)
+            size = (int(80*(height/45)), height)
+        else:
+            width = 80 * round(im.width/80)
+            size = (width, int(45*(width/80)))
+        im = im.resize(size)
+        im.save("thumbnail.png", "PNG")
+        return "thumbnail.png"

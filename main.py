@@ -307,6 +307,7 @@ class Ui_MainWindow(object):
         self.set_output.setText(_translate("MainWindow", "Output Location..."))
         self.title_label.setText(_translate("MainWindow", "Title"))
         self.stretch_image.setText(_translate("MainWindow", "Stretch Image"))
+        self.stretch_image.clicked.connect(lambda: config.edit_config('stretch_image', self.stretch_image.isChecked()))
         self.am_1_vol.setValue(50)
         self.am_2_vol.setValue(50)
         self.am_3_vol.setValue(50)
@@ -413,7 +414,8 @@ class DownloadThread(QtCore.QThread):
         if self.attr['config'].options_dict['ambience']:
             download.ambience_download(self, self.amb, self.attr['config'].options_dict['audio_bitrate'])
         tracklist_length = util.generate_tracklist(self.attr['config'])
-        print(tracklist_length)
+        if self.attr['config'].options_dict['stretch_image']:
+            self.attr['thumbnail'] = util.stretch_image(self.attr['thumbnail'])
         title = self.attr['title']
         if title == "":
             title = self.attr['playlist'][self.attr['playlist'].index("=")+1:]

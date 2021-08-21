@@ -2,6 +2,7 @@ ambience: false
 audio_bitrate: 256
 generate_timestamps: true
 keep_order: true
-last_thumb_dir: C:/Users/itzst/Pictures/Emojis
+last_thumb_dir: D:/itzst/Images
 normalize_audio: true
+stretch_image: true
 video_bitrate: 4000
