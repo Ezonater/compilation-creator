@@ -52,6 +52,9 @@ def clean_up():
     if os.path.isfile("normalized_audio.mp3"):
         os.remove("normalized_audio.mp3")
 
+    if os.path.isfile("thumbnail.png"):
+        os.remove("thumbnail.png")
+
 def stretch_image(path):
     with Image.open(path) as im:
         print(im.width)
