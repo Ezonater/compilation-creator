@@ -1,6 +1,8 @@
-audio_bitrate: '256000'
+ambience: false
+audio_bitrate: 256
 generate_timestamps: true
-ip_type: ''
 keep_order: true
+last_thumb_dir: D:/itzst/Images
 normalize_audio: true
-video_bitrate: '4000000'
+stretch_image: true
+video_bitrate: 4000
