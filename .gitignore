@@ -1,5 +1,7 @@
 .idea
 .idea/**
+.vscode
+.vscode/**
 __pycache__
 __pycache__/**
 build
@@ -14,3 +16,17 @@ pyinstaller.txt
 tracklist.txt
 other
 other/**
+venv
+venv/**
+tracklist
+tracklist/**
+ambience
+ambience/**
+ffmpeg.exe
+youtube-dlp.exe
+big_audio.mp3
+normalized_audio.mp3
+concat.txt
+finished.mp4
+*.mp4
+thumbnail.png
