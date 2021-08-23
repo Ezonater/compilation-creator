@@ -88,10 +88,6 @@ def generate_mp4(window, title, thumbnail, audio_bitrate, video_bitrate, total_l
     window.progress_update.emit(['format', "Generating output: %p%"])
     window.progress_update.emit(['maximum', total_length])
     window.progress_update.emit(['increment', 0])
-    scale = '1280:720'
-    im = Image.open(thumbnail)
-    width, height = im.size
-    print(width, height)
     p = subprocess.Popen(
         ['ffmpeg', '-y', '-loop', '1', '-framerate', '5', '-i', thumbnail, '-i', 'big_audio.mp3', '-c:v', 'libx264',
          '-tune', 'stillimage', '-c:a', 'aac', '-b:v', str(video_bitrate), '-b:a', str(audio_bitrate), '-pix_fmt',

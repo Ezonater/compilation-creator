@@ -307,6 +307,7 @@ class Ui_MainWindow(object):
         self.set_output.setText(_translate("MainWindow", "Output Location..."))
         self.title_label.setText(_translate("MainWindow", "Title"))
         self.stretch_image.setText(_translate("MainWindow", "Stretch Image"))
+        self.stretch_image.setChecked(config.options_dict['stretch_image'])
         self.stretch_image.clicked.connect(lambda: config.edit_config('stretch_image', self.stretch_image.isChecked()))
         self.am_1_vol.setValue(50)
         self.am_2_vol.setValue(50)
