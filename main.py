@@ -409,6 +409,7 @@ class DownloadThread(QtCore.QThread):
         global compiling
         compiling = True
         print("compiling started!")
+        print(self.attr, self.amb)
         self.start_button.emit(False)
         util.clean_up()
         download.playlist_download(self, self.attr['playlist'], self.attr['config'].options_dict['audio_bitrate'])

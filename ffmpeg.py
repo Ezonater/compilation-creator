@@ -15,6 +15,7 @@ def compile(window, title, thumbnail, audio_bitrate, video_bitrate, normalize, a
 
 
 def concat(window, total_length):
+    print('big audio creation')
     window.progress_update.emit(['format', "Concatenating mp3s: %p%"])
     window.progress_update.emit(['maximum', total_length])
     window.progress_update.emit(['increment', 0])
@@ -42,6 +43,7 @@ def concat(window, total_length):
 
 
 def normalize_audio(window, audio_bitrate, total_length):
+    print('normalize')
     window.progress_update.emit(['format', "Normalizing audio: %p%"])
     window.progress_update.emit(['maximum', total_length])
     window.progress_update.emit(['increment', 0])
