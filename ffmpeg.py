@@ -27,7 +27,7 @@ def concat(window, total_length):
             entry += '\'\n'
             f.write(entry)
             f.close()
-    p = subprocess.Popen(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', "concat.txt", 'big_audio.mp3'],
+    p = subprocess.Popen(['ffmpeg', '-f', 'concat', '-safe', '0', '-i', "concat.txt", os.path.join(os.getcwd(),'big_audio.mp3')],
                          stdin=subprocess.PIPE, stderr=subprocess.STDOUT, stdout=PIPE, creationflags=CREATE_NO_WINDOW,
                          universal_newlines=True)
     for line in p.stdout:
@@ -47,7 +47,7 @@ def normalize_audio(window, audio_bitrate, total_length):
     window.progress_update.emit(['format', "Normalizing audio: %p%"])
     window.progress_update.emit(['maximum', total_length])
     window.progress_update.emit(['increment', 0])
-    p = subprocess.Popen(['ffmpeg', '-i', 'big_audio.mp3', '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm',
+    p = subprocess.Popen(['ffmpeg', '-i', os.path.join(os.getcwd(),'big_audio.mp3'), '-b:a', str(audio_bitrate), '-filter_complex', 'loudnorm',
                           'normalized_audio.mp3'], stdin=PIPE, stderr=subprocess.STDOUT, stdout=PIPE,
                          creationflags=CREATE_NO_WINDOW, universal_newlines=True)
     for line in p.stdout:
