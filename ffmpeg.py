@@ -1,8 +1,6 @@
 import os
 import subprocess
 from subprocess import CREATE_NO_WINDOW, PIPE
-from PIL import Image
-
 
 def compile(window, title, thumbnail, audio_bitrate, video_bitrate, normalize, ambience, total_length):
     print(thumbnail, audio_bitrate, video_bitrate, normalize, total_length)
