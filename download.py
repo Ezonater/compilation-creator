@@ -16,14 +16,16 @@ def playlist_download(window, link, audio_bitrate):
 
         def debug(self, msg):
             print(msg)
-            if msg.startswith('[download] Downloading video'):
-                self.current_download = int(msg[msg.index('video') + 6:].split(" of ")[0])
+            if msg.startswith('[download] Downloading item'):
+                cur_and_size = msg[msg.index('item') + 5:].split(" of ")
+                self.current_download = int(cur_and_size[0])
                 self.download_progress = 0
-                tracklist_size = int(msg[msg.index('video') + 6:].split(" of ")[1])
+                tracklist_size = int(cur_and_size[1])
                 window.progress_update.emit(['maximum',tracklist_size * 100])
             if '[download]' in msg and "%" in msg:
                 self.download_progress = float(
                     msg[:msg.index('%')].split(" ")[len(msg[:msg.index('%')].split(" ")) - 1])
+                print(self.download_progress + (self.current_download - 1) * 100)
             window.progress_update.emit(['increment', self.download_progress + (self.current_download - 1) * 100])
 
         def warning(self, msg):
@@ -48,6 +50,7 @@ def playlist_download(window, link, audio_bitrate):
         }],
         'logger': MyLogger(),
         'progress_hooks': [my_hook],
+        'no_color': True, # Make parsing output in code easier
     }
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([link])
